@@ -34,13 +34,13 @@ from typing import Callable
 from core.command_processor import CommandProcessor, Request
 from core.channels import Channel
 from core.exceptions import ChannelFailureException
-from core.messaging import BrightsideMessage
+from core.messaging import BrightsideMessage, BrightsideMessageHeader, BrightsideMessageType
 
 
 class MessagePump:
     def __init__(self, command_processor: CommandProcessor,
                  channel: Channel,
-                 mapper_func: Callable[[Request], BrightsideMessage],
+                 mapper_func: Callable[[BrightsideMessage], Request],
                  timeout: int = None) -> None:
         self._command_processor = command_processor
         self._channel = channel
@@ -49,10 +49,30 @@ class MessagePump:
 
     def run(self) -> None:
         while True:
+            _message = None
             try:
-                self._channel.receive(self._timeout)
+                _message = self._channel.receive(self._timeout)
             except ChannelFailureException:
                 break
+
+            if _message is None:
+                pass # TODO: We need to iterate over loop
+            elif _message.header.message_type == BrightsideMessageType.quit:
+                # TODO: Log intent to break
+                break
+
+            # Serviceable message
+            request = self._translate_message(_message)
+            self._dispatch_message(_message._message_header, request)
+
+    def _translate_message(self, message: BrightsideMessage)-> Request:
+        return self._mapper_func(message)
+
+    def _dispatch_message(self, message_header: BrightsideMessageHeader, request: Request) -> None:
+        if message_header.message_type == BrightsideMessageType.command:
+            self._command_processor.send(request)
+        elif message_header.message_type == BrightsideMessageType.event:
+            self._command_processor.publish(request)
 
 
 

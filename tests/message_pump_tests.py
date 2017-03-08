@@ -39,7 +39,7 @@ from core.channels import Channel
 from core.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideMessageBodyType, BrightsideMessageHeader, BrightsideMessageType, BrightsideMessageFactory
 from serviceactivator.message_pump import MessagePump
 
-from tests.handlers_testdoubles import MyCommandHandler, MyCommand, map_to_message
+from tests.handlers_testdoubles import MyCommandHandler, MyCommand, map_to_request
 
 
 class MessagePumpFixture(unittest.TestCase):
@@ -55,7 +55,7 @@ class MessagePumpFixture(unittest.TestCase):
         channel = Mock(spec=Channel)
         command_processor = Mock(spec=CommandProcessor)
 
-        message_pump = MessagePump(command_processor, channel, map_to_message)
+        message_pump = MessagePump(command_processor, channel, map_to_request)
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
@@ -71,7 +71,11 @@ class MessagePumpFixture(unittest.TestCase):
 
         message_pump.run()
 
-        channel_calls = [call.receive(), call.receive]
+        channel_calls = [call.receive(100), call.receive(100)]
         channel.assert_has_calls(channel_calls)
         cp_calls = [call.send(request)]
         command_processor.assert_has_calls(cp_calls)
+
+
+        # TODO: Test for message pump is missing
+        # TODO: Unmappable message

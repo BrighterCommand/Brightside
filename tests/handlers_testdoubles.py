@@ -184,3 +184,9 @@ def map_to_message(request: Request) -> BrightsideMessage:
     message_body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json())
     message = BrightsideMessage(BrightsideMessageHeader(request.id, "topic", BrightsideMessageType.command), message_body)
     return message
+
+
+def map_to_request(message: BrightsideMessage) -> Request:
+    return JsonRequestSerializer(request=MyCommand(), serialized_request=message.body.value)\
+        .deserialize_from_json()
+
