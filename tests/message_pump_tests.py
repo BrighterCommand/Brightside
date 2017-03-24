@@ -71,10 +71,9 @@ class MessagePumpFixture(unittest.TestCase):
 
         message_pump.run()
 
-        channel_calls = [call.receive(100), call.receive(100)]
-        channel.assert_has_calls(channel_calls)
-        cp_calls = [call.send(request)]
-        command_processor.assert_has_calls(cp_calls)
+        channel.receive.assert_called_with(100)
+        self.assertEqual(channel.receive.call_count, 2)
+        self.assertTrue(command_processor.send.call_count, 1)
 
 
         # TODO: Test for message pump is missing
