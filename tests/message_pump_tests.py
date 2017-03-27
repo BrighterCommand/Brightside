@@ -35,6 +35,7 @@ from uuid import uuid4
 
 from arame.messaging import JsonRequestSerializer
 from core.command_processor import CommandProcessor
+from core.exceptions import ConfigurationException
 from core.channels import Channel
 from core.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideMessageBodyType, BrightsideMessageHeader, BrightsideMessageType, BrightsideMessageFactory
 from serviceactivator.message_pump import MessagePump
@@ -77,4 +78,39 @@ class MessagePumpFixture(unittest.TestCase):
 
 
         # TODO: Test for message pump is missing
+    def test_the_pump_should_dispatch_a_command_processor(self):
+        """
+            Given that I have a message pump for a channel
+             When there is no message mapper for that channel
+             Then we shhould throw an exception to indicate a configuration error
+        """
+        handler = MyCommandHandler()
+        request = MyCommand()
+        channel = Mock(spec=Channel)
+        command_processor = Mock(spec=CommandProcessor)
+
+        message_pump = MessagePump(command_processor, channel, None)
+
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
+        body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
+                                     BrightsideMessageBodyType.application_json)
+        message = BrightsideMessage(header, body)
+
+        quit_message = BrightsideMessageFactory.create_quit_message()
+
+        # add messages to that when channel is called it returns first message then qui tmessage
+        response_queue = [message, quit_message]
+        channel_spec = {"receive.side_effect" : response_queue}
+        channel.configure_mock(**channel_spec)
+
+        excepton_caught = False
+        try:
+            message_pump.run()
+        except ConfigurationException:
+            excepton_caug:w
+            ht = True
+
+        self.assertTrue(exception_caught)
+
+
         # TODO: Unmappable message
