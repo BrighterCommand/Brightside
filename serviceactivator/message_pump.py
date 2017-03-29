@@ -29,11 +29,12 @@ THE SOFTWARE.
 ***********************************************************************
 """
 
+import time
 from typing import Callable
 
 from core.command_processor import CommandProcessor, Request
 from core.channels import Channel
-from core.exceptions import ChannelFailureException
+from core.exceptions import ChannelFailureException, ConfigurationException
 from core.messaging import BrightsideMessage, BrightsideMessageHeader, BrightsideMessageType
 
 
@@ -45,7 +46,7 @@ class MessagePump:
         self._command_processor = command_processor
         self._channel = channel
         self._mapper_func = mapper_func
-        self._timeout = timeout if timeout is not None else 100
+        self._timeout = 1000 / timeout if timeout else 0.5
 
     def run(self) -> None:
         while True:
@@ -56,16 +57,25 @@ class MessagePump:
                 break
 
             if _message is None:
-                pass # TODO: We need to iterate over loop
+                time.sleep(self._timeout)
+                continue
             elif _message.header.message_type == BrightsideMessageType.quit:
                 # TODO: Log intent to break
                 break
+            elif _message.header.message_type == BrightsideMessageType.unacceptable:
+                # TODO: Log an unacceptable message
+                self._acknowledge_message(_message)
+                continue
 
             # Serviceable message
             request = self._translate_message(_message)
             self._dispatch_message(_message._message_header, request)
 
+            self._acknowledge_message(_message)
+
     def _translate_message(self, message: BrightsideMessage)-> Request:
+        if self._mapper_func is None:
+            raise ConfigurationException("Missing Mapper Function for message topic {}".format(message.header.topic))
         return self._mapper_func(message)
 
     def _dispatch_message(self, message_header: BrightsideMessageHeader, request: Request) -> None:
@@ -73,6 +83,10 @@ class MessagePump:
             self._command_processor.send(request)
         elif message_header.message_type == BrightsideMessageType.event:
             self._command_processor.publish(request)
+
+    def _acknowledge_message(self, message: BrightsideMessage) -> None:
+        # TODO: We need to log acknowledging a message
+        self._channel.acknowledge(message)
 
 
 

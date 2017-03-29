@@ -75,10 +75,11 @@ class MessagePumpFixture(unittest.TestCase):
         channel.receive.assert_called_with(100)
         self.assertEqual(channel.receive.call_count, 2)
         self.assertTrue(command_processor.send.call_count, 1)
+        self.assertEqual(channel.acknowledge.call_count, 1)
 
 
         # TODO: Test for message pump is missing
-    def test_the_pump_should_dispatch_a_command_processor(self):
+    def test_the_pump_should_fail_on_a_missing_message_mapper(self):
         """
             Given that I have a message pump for a channel
              When there is no message mapper for that channel
@@ -107,10 +108,43 @@ class MessagePumpFixture(unittest.TestCase):
         try:
             message_pump.run()
         except ConfigurationException:
-            excepton_caug:w
-            ht = True
+            excepton_caught = True
 
-        self.assertTrue(exception_caught)
+        self.assertTrue(excepton_caught)
 
 
         # TODO: Unmappable message
+    def test_the_pump_should_acknowledge_and_discard_an_unacceptable_message(self):
+        """
+            Given that I have a message pump for a channel
+             When I cannot read the message received from that channel
+             Then I should acknowledge the message to dicard it
+        """
+        handler = MyCommandHandler()
+        request = MyCommand()
+        channel = Mock(spec=Channel)
+        command_processor = Mock(spec=CommandProcessor)
+
+        message_pump = MessagePump(command_processor, channel, map_to_request)
+
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.unacceptable)
+        body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
+                                     BrightsideMessageBodyType.application_json)
+        message = BrightsideMessage(header, body)
+
+        quit_message = BrightsideMessageFactory.create_quit_message()
+
+        # add messages to that when channel is called it returns first message then qui tmessage
+        response_queue = [message, quit_message]
+        channel_spec = {"receive.side_effect" : response_queue}
+        channel.configure_mock(**channel_spec)
+
+        message_pump.run()
+
+        channel.receive.assert_called_with(100)
+        self.assertEqual(channel.receive.call_count, 2)
+        # We acknowledge so that a 'poison pill' message cannot block our queue
+        self.assertEqual(channel.acknowledge.call_count, 1)
+        # Does not send the message, just discards it
+        self.assertTrue(command_processor.send.call_count, 0)
+
