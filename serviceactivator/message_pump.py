@@ -29,8 +29,10 @@ THE SOFTWARE.
 ***********************************************************************
 """
 
+import logging
 import time
 from typing import Callable
+from threading import current_thread
 
 from core.command_processor import CommandProcessor, Request
 from core.channels import Channel
@@ -47,31 +49,41 @@ class MessagePump:
         self._channel = channel
         self._mapper_func = mapper_func
         self._timeout = 1000 / timeout if timeout else 0.5
+        self._logger = logging.getLogger(__name__)
 
     def run(self) -> None:
         while True:
             _message = None
             try:
+                self._logger.debug("MessagePump: Receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
+
                 _message = self._channel.receive(self._timeout)
             except ChannelFailureException:
-                break
+                self._logger.warn("MessagePump: ChannelFailureException receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
+                continue
+            except Exception:
+                self._logger.warn("MessagePump: Exception receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
 
             if _message is None:
+                raise ChannelFailureException("Could not receive message. Note that should return BrightsideMessageType.none from an emoty queeu")
+            elif _message.header.message_type == BrightsideMessageType.none:
                 time.sleep(self._timeout)
                 continue
             elif _message.header.message_type == BrightsideMessageType.quit:
-                # TODO: Log intent to break
+                self._logger.debug("MessagePump: Quite receiving messages from {} on thread # ".format(self._channel.name(), current_thread().name))
                 break
             elif _message.header.message_type == BrightsideMessageType.unacceptable:
-                # TODO: Log an unacceptable message
+                self._logger.debug("MessagePump: Failed to parse a message from the incoming message with id () from {} on thread # ".format(_message.id, self._channel.name(), current_thread().name))
                 self._acknowledge_message(_message)
                 continue
 
             # Serviceable message
             request = self._translate_message(_message)
-            self._dispatch_message(_message._message_header, request)
+            self._dispatch_message(_message.header, request)
 
             self._acknowledge_message(_message)
+
+        self._logger.debug("MessagePump: Finished running message loop, no longer receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
 
     def _translate_message(self, message: BrightsideMessage)-> Request:
         if self._mapper_func is None:
@@ -85,7 +97,7 @@ class MessagePump:
             self._command_processor.publish(request)
 
     def _acknowledge_message(self, message: BrightsideMessage) -> None:
-        # TODO: We need to log acknowledging a message
+        self._logger.debug("MessagePump: Acknowledge message {} from {} on thread # {}".format(message.id, self._channel.name(), current_thread().name))
         self._channel.acknowledge(message)
 
 

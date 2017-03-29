@@ -72,7 +72,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         message_pump.run()
 
-        channel.receive.assert_called_with(100)
+        channel.receive.assert_called_with(0.5)
         self.assertEqual(channel.receive.call_count, 2)
         self.assertTrue(command_processor.send.call_count, 1)
         self.assertEqual(channel.acknowledge.call_count, 1)
@@ -141,10 +141,44 @@ class MessagePumpFixture(unittest.TestCase):
 
         message_pump.run()
 
-        channel.receive.assert_called_with(100)
+        channel.receive.assert_called_with(0.5)
         self.assertEqual(channel.receive.call_count, 2)
         # We acknowledge so that a 'poison pill' message cannot block our queue
         self.assertEqual(channel.acknowledge.call_count, 1)
+        # Does not send the message, just discards it
+        self.assertTrue(command_processor.send.call_count, 0)
+
+    def test_the_pump_should_limit_unacceptable_messages(self):
+        """
+            Given that I have a message pump for a channel
+             When I cannot read the message received from that channel
+             Then I should acknowledge the message to dicard it
+        """
+        handler = MyCommandHandler()
+        request = MyCommand()
+        channel = Mock(spec=Channel)
+        command_processor = Mock(spec=CommandProcessor)
+
+        message_pump = MessagePump(command_processor, channel, map_to_request)
+
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.unacceptable)
+        body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
+                                     BrightsideMessageBodyType.application_json)
+        message = BrightsideMessage(header, body)
+
+        quit_message = BrightsideMessageFactory.create_quit_message()
+
+        # add messages to that when channel is called it returns first message then qui tmessage
+        response_queue = [message, quit_message]
+        channel_spec = {"receive.side_effect" : response_queue}
+        channel.configure_mock(**channel_spec)
+
+        message_pump.run()
+
+        # Should acknowledge first three so that a 'poison pill' message cannot block our queue
+        self.assertEqual(channel.acknowledge.call_count, 3)
+        # We should dispose of the channel, by sending ourselves a quit messages
+        self.assertEqual(channel.stop.call_count, 1)
         # Does not send the message, just discards it
         self.assertTrue(command_processor.send.call_count, 0)
 
