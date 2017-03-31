@@ -31,6 +31,7 @@ THE SOFTWARE.
 from enum import Enum
 from queue import Queue
 
+from core.exceptions import ChannelFailureException
 from core.messaging import BrightsideConsumer, BrightsideMessage, BrightsideMessageFactory
 
 
@@ -38,6 +39,7 @@ class ChannelState(Enum):
     initialized = 0
     started = 1
     stopping = 2
+    stopped = 3
 
 
 class ChannelName:
@@ -62,6 +64,9 @@ class Channel:
     def acknowledge(self, message: BrightsideMessage):
         self._consumer.acknowledge(message)
 
+    def end(self) -> None:
+        self._state = ChannelState.stopped
+
     @property
     def length(self) -> int:
         return self._queue.qsize()
@@ -70,6 +75,9 @@ class Channel:
         return self._name
 
     def receive(self, timeout: int) -> BrightsideMessage:
+        if self._state is ChannelState.stopped:
+            raise ChannelFailureException("Channcle has been stopped, cannot resume listening")
+
         if self._state is ChannelState.initialized:
             self._state = ChannelState.started
 

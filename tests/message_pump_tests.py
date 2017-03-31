@@ -146,7 +146,7 @@ class MessagePumpFixture(unittest.TestCase):
         # We acknowledge so that a 'poison pill' message cannot block our queue
         self.assertEqual(channel.acknowledge.call_count, 1)
         # Does not send the message, just discards it
-        self.assertTrue(command_processor.send.call_count, 0)
+        self.assertEqual(command_processor.send.call_count, 0)
 
     def test_the_pump_should_limit_unacceptable_messages(self):
         """
@@ -158,27 +158,31 @@ class MessagePumpFixture(unittest.TestCase):
         request = MyCommand()
         channel = Mock(spec=Channel)
         command_processor = Mock(spec=CommandProcessor)
+        unacceptable_message_limit = 3
 
-        message_pump = MessagePump(command_processor, channel, map_to_request)
+        message_pump = MessagePump(command_processor, channel, map_to_request, unacceptable_message_limit)
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.unacceptable)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
                                      BrightsideMessageBodyType.application_json)
-        message = BrightsideMessage(header, body)
+        message_one = BrightsideMessage(header, body)
+        message_two = BrightsideMessage(header, body)
+        message_three = BrightsideMessage(header, body)
+        message_four = BrightsideMessage(header, body)
 
         quit_message = BrightsideMessageFactory.create_quit_message()
 
         # add messages to that when channel is called it returns first message then qui tmessage
-        response_queue = [message, quit_message]
+        response_queue = [message_one, message_two, message_three, message_four, quit_message]
         channel_spec = {"receive.side_effect" : response_queue}
         channel.configure_mock(**channel_spec)
 
         message_pump.run()
 
         # Should acknowledge first three so that a 'poison pill' message cannot block our queue
-        self.assertEqual(channel.acknowledge.call_count, 3)
+        self.assertEqual(channel.acknowledge.call_count, unacceptable_message_limit)
         # We should dispose of the channel, by sending ourselves a quit messages
         self.assertEqual(channel.stop.call_count, 1)
         # Does not send the message, just discards it
-        self.assertTrue(command_processor.send.call_count, 0)
+        self.assertEqual(command_processor.send.call_count, 0)
 

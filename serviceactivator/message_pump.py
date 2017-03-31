@@ -44,15 +44,23 @@ class MessagePump:
     def __init__(self, command_processor: CommandProcessor,
                  channel: Channel,
                  mapper_func: Callable[[BrightsideMessage], Request],
-                 timeout: int = None) -> None:
+                 timeout: int = None,
+                 unacceptable_message_limit: int = None) -> None:
         self._command_processor = command_processor
         self._channel = channel
         self._mapper_func = mapper_func
         self._timeout = 1000 / timeout if timeout else 0.5
         self._logger = logging.getLogger(__name__)
+        self._unacceptable_message_limit = unacceptable_message_limit if unacceptable_message_limit else 500
+        self._unacceptable_message_count = 0
 
     def run(self) -> None:
         while True:
+
+            if self._unacceptable_message_limit_reached():
+                self._channel.end()
+                break
+
             _message = None
             try:
                 self._logger.debug("MessagePump: Receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
@@ -85,10 +93,10 @@ class MessagePump:
 
         self._logger.debug("MessagePump: Finished running message loop, no longer receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
 
-    def _translate_message(self, message: BrightsideMessage)-> Request:
-        if self._mapper_func is None:
-            raise ConfigurationException("Missing Mapper Function for message topic {}".format(message.header.topic))
-        return self._mapper_func(message)
+
+    def _acknowledge_message(self, message: BrightsideMessage) -> None:
+        self._logger.debug("MessagePump: Acknowledge message {} from {} on thread # {}".format(message.id, self._channel.name(), current_thread().name))
+        self._channel.acknowledge(message)
 
     def _dispatch_message(self, message_header: BrightsideMessageHeader, request: Request) -> None:
         if message_header.message_type == BrightsideMessageType.command:
@@ -96,9 +104,18 @@ class MessagePump:
         elif message_header.message_type == BrightsideMessageType.event:
             self._command_processor.publish(request)
 
-    def _acknowledge_message(self, message: BrightsideMessage) -> None:
-        self._logger.debug("MessagePump: Acknowledge message {} from {} on thread # {}".format(message.id, self._channel.name(), current_thread().name))
-        self._channel.acknowledge(message)
+    def _increment_unacceptable_message_count(self) -> int:
+        self._unacceptable_message_count += 1
+        return self._unacceptable_message_count
+
+    def _translate_message(self, message: BrightsideMessage)-> Request:
+        if self._mapper_func is None:
+            raise ConfigurationException("Missing Mapper Function for message topic {}".format(message.header.topic))
+        return self._mapper_func(message)
+
+    def _unacceptable_message_limit_reached(self) -> bool:
+        return self._unacceptable_message_count >= self._unacceptable_message_limit
+
 
 
 

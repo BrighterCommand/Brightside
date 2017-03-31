@@ -165,6 +165,10 @@ class ArameConsumer(BrightsideConsumer):
             self._msg.ack()
             self._msg = None
 
+    def cancel(self):
+        self._
+
+
     def has_acknowledged(self, message):
         if (self._message is not None) and self._message.id == message.id:
             if self._msg is None:

@@ -171,6 +171,10 @@ class BrightsideConsumer(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def cancel(self) ->None:
+        pass
+
+    @abstractmethod
     def has_acknowledged(self, message):
         pass
 
