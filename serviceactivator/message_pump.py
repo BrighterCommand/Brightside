@@ -83,6 +83,7 @@ class MessagePump:
             elif _message.header.message_type == BrightsideMessageType.unacceptable:
                 self._logger.debug("MessagePump: Failed to parse a message from the incoming message with id () from {} on thread # ".format(_message.id, self._channel.name(), current_thread().name))
                 self._acknowledge_message(_message)
+                self._increment_unacceptable_message_count()
                 continue
 
             # Serviceable message

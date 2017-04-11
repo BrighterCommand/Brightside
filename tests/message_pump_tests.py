@@ -160,7 +160,7 @@ class MessagePumpFixture(unittest.TestCase):
         command_processor = Mock(spec=CommandProcessor)
         unacceptable_message_limit = 3
 
-        message_pump = MessagePump(command_processor, channel, map_to_request, unacceptable_message_limit)
+        message_pump = MessagePump(command_processor, channel, map_to_request, unacceptable_message_limit=unacceptable_message_limit)
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.unacceptable)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
@@ -182,7 +182,7 @@ class MessagePumpFixture(unittest.TestCase):
         # Should acknowledge first three so that a 'poison pill' message cannot block our queue
         self.assertEqual(channel.acknowledge.call_count, unacceptable_message_limit)
         # We should dispose of the channel, by sending ourselves a quit messages
-        self.assertEqual(channel.stop.call_count, 1)
+        self.assertEqual(channel.end.call_count, 1)
         # Does not send the message, just discards it
         self.assertEqual(command_processor.send.call_count, 0)
 
