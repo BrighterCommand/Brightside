@@ -35,7 +35,7 @@ from uuid import uuid4
 
 from arame.messaging import JsonRequestSerializer
 from core.command_processor import CommandProcessor
-from core.exceptions import ConfigurationException
+from core.exceptions import ConfigurationException, DeferMessageException
 from core.channels import Channel
 from core.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideMessageBodyType, BrightsideMessageHeader, BrightsideMessageType, BrightsideMessageFactory
 from serviceactivator.message_pump import MessagePump
@@ -185,4 +185,39 @@ class MessagePumpFixture(unittest.TestCase):
         self.assertEqual(channel.end.call_count, 1)
         # Does not send the message, just discards it
         self.assertEqual(command_processor.send.call_count, 0)
+
+    def test_the_pump_should_reque_deferred_messages(self):
+        """
+            Given that I have a message pump for a channel
+             When the handler raises a defer message exception for that message
+             Then requeue the message
+        """
+        handler = MyCommandHandler()
+        request = MyCommand()
+        channel = Mock(spec=Channel)
+        command_processor = Mock(spec=CommandProcessor)
+
+        message_pump = MessagePump(command_processor, channel, map_to_request)
+
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
+        body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
+                                     BrightsideMessageBodyType.application_json)
+        message = BrightsideMessage(header, body)
+
+        quit_message = BrightsideMessageFactory.create_quit_message()
+
+        # add messages to that when channel is called it returns first message then qui tmessage
+        response_queue = [message, quit_message]
+        channel_spec = {"receive.side_effect" : response_queue}
+        channel.configure_mock(**channel_spec)
+
+        requeue_spec = {"send.side_effect" : DeferMessageException()}
+        command_processor.configure_mock(**requeue_spec)
+
+        message_pump.run()
+
+        channel.receive.assert_called_with(0.5)
+        self.assertEqual(channel.receive.call_count, 2)
+        self.assertTrue(command_processor.send.call_count, 1)
+        self.assertEqual(channel.requeue.call_count, 1)
 

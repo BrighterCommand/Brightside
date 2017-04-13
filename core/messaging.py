@@ -171,7 +171,7 @@ class BrightsideConsumer(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def cancel(self) ->None:
+    def cancel(self) -> None:
         pass
 
     @abstractmethod
@@ -184,6 +184,9 @@ class BrightsideConsumer(metaclass=ABCMeta):
 
     @abstractmethod
     def receive(self, timeout: int) -> BrightsideMessage:
+        pass
+
+    def requeue(self, message) -> None:
         pass
 
 

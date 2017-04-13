@@ -61,6 +61,9 @@ class Channel:
         self._queue = Queue()
         self._state = ChannelState.initialized
 
+    def __len__(self):
+        return self._queue.qsize()
+
     def acknowledge(self, message: BrightsideMessage):
         self._consumer.acknowledge(message)
 
@@ -68,9 +71,6 @@ class Channel:
         self._state = ChannelState.stopped
 
     @property
-    def length(self) -> int:
-        return self._queue.qsize()
-
     def name(self) -> ChannelName:
         return self._name
 
@@ -94,6 +94,8 @@ class Channel:
         self._queue.put(BrightsideMessageFactory.create_quit_message())
         self._state = ChannelState.stopping
 
+    def requeue(self, message):
+        self._consumer.requeue(message)
 
 
 

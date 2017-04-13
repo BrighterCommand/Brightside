@@ -34,6 +34,10 @@ class ConfigurationException(Exception):
     pass
 
 
+class DeferMessageException(Exception):
+    pass
+
+
 class MessagingException(Exception):
     pass
 

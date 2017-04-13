@@ -168,7 +168,6 @@ class ArameConsumer(BrightsideConsumer):
     def cancel(self):
         self._
 
-
     def has_acknowledged(self, message):
         if (self._message is not None) and self._message.id == message.id:
             if self._msg is None:
@@ -231,7 +230,10 @@ class ArameConsumer(BrightsideConsumer):
 
         return self._message
 
-
-
+    def requeue(self, message: BrightsideMessage) -> None:
+        """
+            TODO: has does a consumeure resend
+        """
+        pass
 
 

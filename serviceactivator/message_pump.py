@@ -36,7 +36,7 @@ from threading import current_thread
 
 from core.command_processor import CommandProcessor, Request
 from core.channels import Channel
-from core.exceptions import ChannelFailureException, ConfigurationException
+from core.exceptions import ChannelFailureException, ConfigurationException, DeferMessageException
 from core.messaging import BrightsideMessage, BrightsideMessageHeader, BrightsideMessageType
 
 
@@ -61,39 +61,43 @@ class MessagePump:
                 self._channel.end()
                 break
 
-            _message = None
+            message = None
             try:
                 self._logger.debug("MessagePump: Receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
 
-                _message = self._channel.receive(self._timeout)
+                message = self._channel.receive(self._timeout)
             except ChannelFailureException:
                 self._logger.warn("MessagePump: ChannelFailureException receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
                 continue
             except Exception:
                 self._logger.warn("MessagePump: Exception receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
 
-            if _message is None:
+            if message is None:
                 raise ChannelFailureException("Could not receive message. Note that should return BrightsideMessageType.none from an emoty queeu")
-            elif _message.header.message_type == BrightsideMessageType.none:
+            elif message.header.message_type == BrightsideMessageType.none:
                 time.sleep(self._timeout)
                 continue
-            elif _message.header.message_type == BrightsideMessageType.quit:
+            elif message.header.message_type == BrightsideMessageType.quit:
                 self._logger.debug("MessagePump: Quite receiving messages from {} on thread # ".format(self._channel.name(), current_thread().name))
                 break
-            elif _message.header.message_type == BrightsideMessageType.unacceptable:
-                self._logger.debug("MessagePump: Failed to parse a message from the incoming message with id () from {} on thread # ".format(_message.id, self._channel.name(), current_thread().name))
-                self._acknowledge_message(_message)
+            elif message.header.message_type == BrightsideMessageType.unacceptable:
+                self._logger.debug("MessagePump: Failed to parse a message from the incoming message with id () from {} on thread # ".format(message.id, self._channel.name(), current_thread().name))
+                self._acknowledge_message(message)
                 self._increment_unacceptable_message_count()
                 continue
 
-            # Serviceable message
-            request = self._translate_message(_message)
-            self._dispatch_message(_message.header, request)
+            try:
+                # Serviceable message
+                request = self._translate_message(message)
+                self._dispatch_message(message.header, request)
 
-            self._acknowledge_message(_message)
+            except DeferMessageException:
+                self._requeue_message(message)
+                continue
+
+            self._acknowledge_message(message)
 
         self._logger.debug("MessagePump: Finished running message loop, no longer receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
-
 
     def _acknowledge_message(self, message: BrightsideMessage) -> None:
         self._logger.debug("MessagePump: Acknowledge message {} from {} on thread # {}".format(message.id, self._channel.name(), current_thread().name))
@@ -108,6 +112,9 @@ class MessagePump:
     def _increment_unacceptable_message_count(self) -> int:
         self._unacceptable_message_count += 1
         return self._unacceptable_message_count
+
+    def _requeue_message(self, message: BrightsideMessage) -> None:
+        self._channel.requeue(message)
 
     def _translate_message(self, message: BrightsideMessage)-> Request:
         if self._mapper_func is None:

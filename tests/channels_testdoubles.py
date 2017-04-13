@@ -39,12 +39,19 @@ class FakeConsumer(BrightsideConsumer):
         To use it, just add BrighsideMessage(s) to the queue and the call receive to pop
         then off the stack. Purge, will clean the queue
     """
+
     def __init__(self):
         self._queue = Queue()
         self._acknowledged_message = None
 
+    def __len__(self):
+        return self._queue.qsize()
+
     def acknowledge(self, message):
         self._acknowledged_message = message
+
+    def cancel(self) -> None:
+        pass
 
     def has_acknowledged(self, message):
         return (self._acknowledged_message is not None) and (self._acknowledged_message.id == message.id)
@@ -61,4 +68,7 @@ class FakeConsumer(BrightsideConsumer):
 
     def receive(self, timeout: int):
         return self._queue.get(block=True,timeout=timeout)
+
+    def requeue(self, message):
+        self._queue.put(message)
 

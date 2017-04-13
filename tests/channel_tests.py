@@ -84,7 +84,7 @@ class ChannelFixture(unittest.TestCase):
 
         channel.receive(1)
 
-        self.assertEqual(str(channel.name()), "test")
+        self.assertEqual(str(channel.name), "test")
         self.assertFalse(consumer.queue.empty())  # Consumer is not empty as we have not read the queue
         self.assertTrue(channel.state == ChannelState.stopping)
 
@@ -107,6 +107,26 @@ class ChannelFixture(unittest.TestCase):
         channel.acknowledge(message)
 
         self.assertTrue(consumer.has_acknowledged(message))
+
+    def test_handle_requeue(self):
+        """
+        Given that I have a channel
+        When I receive a requeue on that channel
+        I should ask the the consumer to requeue the message
+        """
+
+        body = BrightsideMessageBody("test message")
+        header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.command)
+        message = BrightsideMessage(header, body)
+
+        consumer = FakeConsumer()
+
+        channel = Channel("test", consumer)
+
+        channel.requeue(message)
+
+        self.assertEqual(len(consumer), 1)
+
 
 
 
