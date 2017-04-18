@@ -221,3 +221,10 @@ class MessagePumpFixture(unittest.TestCase):
         self.assertTrue(command_processor.send.call_count, 1)
         self.assertEqual(channel.requeue.call_count, 1)
 
+    def test_handle_requeue_has_upper_bound(self):
+        """
+        Given that I have a channel
+        When I receive a requeue on that channel
+        I should ask the consumer to requeue, up to a retry limit
+        So that poison messages do not fill our queues
+        """

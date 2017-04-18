@@ -68,6 +68,10 @@ class ArameGatewayTests(unittest.TestCase):
         self.assertEqual(message.body.value, read_message.body.value)
         self.assertTrue(self._consumer.has_acknowledged(read_message))
 
+    def test_requeuein_a_message(self):
+        """Given that I have an"""
+
+
     def test_posting_object_state(self):
         """Given that I have an RMQ producer
             when I deserialize an object via the producer
