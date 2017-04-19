@@ -234,6 +234,6 @@ class ArameConsumer(BrightsideConsumer):
         """
             TODO: has does a consumeure resend
         """
-        pass
+        self._msg.requeue()
 
 
