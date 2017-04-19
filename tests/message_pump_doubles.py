@@ -1,5 +1,5 @@
 """"
-File             : message_pump.py
+File             : message_pump_doubles.py
 Author           : ian
 Created          : 12-09-2016
 
@@ -29,3 +29,53 @@ THE SOFTWARE.
 ***********************************************************************
 """
 
+from queue import Queue
+
+from core.channels import ChannelFailureException, ChannelName, ChannelState
+from core.messaging import BrightsideMessage, BrightsideMessageFactory
+
+
+class FakeChannel:
+    def __init__(self, name: str) -> None:
+        self._name = ChannelName(name)
+        self._queue = Queue()
+        self._state = ChannelState.initialized
+
+    def __len__(self):
+        return self._queue.qsize()
+
+    def acknowledge(self, message: BrightsideMessage):
+        pass
+
+    def add(self, message: BrightsideMessage):
+        self._queue.put(message)
+
+    def end(self) -> None:
+        self._state = ChannelState.stopped
+
+    @property
+    def name(self) -> ChannelName:
+        return self._name
+
+    def receive(self, timeout: int) -> BrightsideMessage:
+        if self._state is ChannelState.stopped:
+            raise ChannelFailureException("Channcle has been stopped, cannot resume listening")
+
+        if self._state is ChannelState.initialized:
+            self._state = ChannelState.started
+
+        if not self._queue.empty():
+            return BrightsideMessageFactory.create_null_message()
+
+        return self._queue.get(block=True, timeout=timeout)
+
+    @property
+    def state(self) -> ChannelState:
+        return self._state
+
+    def stop(self):
+        self._queue.put(BrightsideMessageFactory.create_quit_message())
+        self._state = ChannelState.stopping
+
+    def requeue(self, message):
+        self._queue.put(message)

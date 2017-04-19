@@ -45,7 +45,8 @@ class MessagePump:
                  channel: Channel,
                  mapper_func: Callable[[BrightsideMessage], Request],
                  timeout: int = None,
-                 unacceptable_message_limit: int = None) -> None:
+                 unacceptable_message_limit: int = None,
+                 requeue_count: int = None) -> None:
         self._command_processor = command_processor
         self._channel = channel
         self._mapper_func = mapper_func
@@ -53,6 +54,7 @@ class MessagePump:
         self._logger = logging.getLogger(__name__)
         self._unacceptable_message_limit = unacceptable_message_limit if unacceptable_message_limit else 500
         self._unacceptable_message_count = 0
+        self._requeue_count = requeue_count
 
     def run(self) -> None:
         while True:
@@ -63,14 +65,14 @@ class MessagePump:
 
             message = None
             try:
-                self._logger.debug("MessagePump: Receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
+                self._logger.debug("MessagePump: Receiving messages from {} on thread # {}".format(self._channel.name, current_thread().name))
 
                 message = self._channel.receive(self._timeout)
             except ChannelFailureException:
-                self._logger.warn("MessagePump: ChannelFailureException receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
+                self._logger.warn("MessagePump: ChannelFailureException receiving messages from {} on thread # {}".format(self._channel.name, current_thread().name))
                 continue
             except Exception:
-                self._logger.warn("MessagePump: Exception receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
+                self._logger.warn("MessagePump: Exception receiving messages from {} on thread # {}".format(self._channel.name, current_thread().name))
 
             if message is None:
                 raise ChannelFailureException("Could not receive message. Note that should return BrightsideMessageType.none from an emoty queeu")
@@ -78,7 +80,7 @@ class MessagePump:
                 time.sleep(self._timeout)
                 continue
             elif message.header.message_type == BrightsideMessageType.quit:
-                self._logger.debug("MessagePump: Quite receiving messages from {} on thread # ".format(self._channel.name(), current_thread().name))
+                self._logger.debug("MessagePump: Quite receiving messages from {} on thread # ".format(self._channel.name, current_thread().name))
                 break
             elif message.header.message_type == BrightsideMessageType.unacceptable:
                 self._logger.debug("MessagePump: Failed to parse a message from the incoming message with id () from {} on thread # ".format(message.id, self._channel.name(), current_thread().name))
@@ -103,6 +105,9 @@ class MessagePump:
         self._logger.debug("MessagePump: Acknowledge message {} from {} on thread # {}".format(message.id, self._channel.name(), current_thread().name))
         self._channel.acknowledge(message)
 
+    def _discard_requeued_messages_enabled(self):
+        return self._requeue_count is not None
+
     def _dispatch_message(self, message_header: BrightsideMessageHeader, request: Request) -> None:
         if message_header.message_type == BrightsideMessageType.command:
             self._command_processor.send(request)
@@ -114,6 +119,17 @@ class MessagePump:
         return self._unacceptable_message_count
 
     def _requeue_message(self, message: BrightsideMessage) -> None:
+        message.increment_handled_count()
+
+        if self._discard_requeued_messages_enabled():
+            if message.handled_count_reached(self._requeue_count):
+                self._logger.error("MessagePump: Have tried {} times to handle this message {} dropping message \n. Message Body {} ",
+                    self._requeue_count, message.id, message.body.value)
+                self._channel.acknowledge(message)
+                return
+
+        self._logger.debug("MessagePump: Re-queueing message {} from {}",
+                message.id, self._channel.name)
         self._channel.requeue(message)
 
     def _translate_message(self, message: BrightsideMessage)-> Request:
@@ -123,6 +139,7 @@ class MessagePump:
 
     def _unacceptable_message_limit_reached(self) -> bool:
         return self._unacceptable_message_count >= self._unacceptable_message_limit
+
 
 
 

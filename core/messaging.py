@@ -69,7 +69,7 @@ class BrightsideMessageHeader:
         different language implementations are compatible
     """
     def __init__(self, identity: UUID, topic: str, message_type: BrightsideMessageType, correlation_id: UUID = None,
-                 reply_to: str = None, content_type: str = "text/plain") -> None:
+                 reply_to: str = None, content_type: str = "text/plain", handled_count: int = None) -> None:
         self._id = identity
         self._topic = topic
         self._message_type = message_type
@@ -77,10 +77,18 @@ class BrightsideMessageHeader:
         self._reply_to = reply_to
         self._content_type = content_type
         self._msg = None
+        self._handled_count = handled_count if handled_count is not None else 0
+
+    @property
+    def handled_count(self) -> int:
+        return self._handled_count
 
     @property
     def id (self) -> UUID:
         return self._id
+
+    def increment_handled_count(self):
+        self._handled_count += 1
 
     @property
     def topic(self) -> str:
@@ -132,9 +140,15 @@ class BrightsideMessage:
     def body(self) -> BrightsideMessageBody:
         return self._message_body
 
+    def handled_count_reached(self, requeue_count: int) -> bool:
+        return self._message_header.handled_count >= requeue_count
+
     @property
     def id(self) -> UUID:
         return self._message_header.id
+
+    def increment_handled_count(self):
+        self._message_header.increment_handled_count()
 
 
 class BrightsideMessageStore(metaclass=ABCMeta):
@@ -192,6 +206,11 @@ class BrightsideConsumer(metaclass=ABCMeta):
 
 class BrightsideMessageFactory:
     """Used to create specific message, particularly the quit message used to terminate a channel"""
+
+    @staticmethod
+    def create_null_message():
+        return BrightsideMessage(BrightsideMessageHeader(uuid4(), "", BrightsideMessageType.none), BrightsideMessageBody(""))
+
     @staticmethod
     def create_quit_message():
         body = BrightsideMessageBody(body="")

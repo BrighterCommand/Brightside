@@ -32,6 +32,7 @@ THE SOFTWARE.
 import unittest
 from unittest.mock import Mock, call
 from uuid import uuid4
+import time
 
 from arame.messaging import JsonRequestSerializer
 from core.command_processor import CommandProcessor
@@ -41,6 +42,7 @@ from core.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideM
 from serviceactivator.message_pump import MessagePump
 
 from tests.handlers_testdoubles import MyCommandHandler, MyCommand, map_to_request
+from tests.message_pump_doubles import FakeChannel
 
 
 class MessagePumpFixture(unittest.TestCase):
@@ -65,7 +67,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         quit_message = BrightsideMessageFactory.create_quit_message()
 
-        # add messages to that when channel is called it returns first message then qui tmessage
+        # add messages to that when channel is called it returns first message then quit message
         response_queue = [message, quit_message]
         channel_spec = {"receive.side_effect" : response_queue}
         channel.configure_mock(**channel_spec)
@@ -78,7 +80,7 @@ class MessagePumpFixture(unittest.TestCase):
         self.assertEqual(channel.acknowledge.call_count, 1)
 
 
-        # TODO: Test for message pump is missing
+    # TODO: Test for message pump is missing
     def test_the_pump_should_fail_on_a_missing_message_mapper(self):
         """
             Given that I have a message pump for a channel
@@ -113,7 +115,7 @@ class MessagePumpFixture(unittest.TestCase):
         self.assertTrue(excepton_caught)
 
 
-        # TODO: Unmappable message
+    # TODO: Unmappable message
     def test_the_pump_should_acknowledge_and_discard_an_unacceptable_message(self):
         """
             Given that I have a message pump for a channel
@@ -228,3 +230,29 @@ class MessagePumpFixture(unittest.TestCase):
         I should ask the consumer to requeue, up to a retry limit
         So that poison messages do not fill our queues
         """
+        handler = MyCommandHandler()
+        request = MyCommand()
+        channel = FakeChannel(name="MyCommand")
+        command_processor = Mock(spec=CommandProcessor)
+
+        message_pump = MessagePump(command_processor, channel, map_to_request, requeue_count=3)
+
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
+        body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
+                                     BrightsideMessageBodyType.application_json)
+        message = BrightsideMessage(header, body)
+
+        channel.add(message)
+
+        requeue_spec = {"send.side_effect" : DeferMessageException()}
+
+        command_processor.configure_mock(**requeue_spec)
+
+        message_pump.run()
+
+        time.sleep(1)
+
+        channel.stop()
+
+        self.assertTrue(command_processor.send.call_count, 3)
+
