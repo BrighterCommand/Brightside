@@ -69,8 +69,30 @@ class ArameGatewayTests(unittest.TestCase):
         self.assertTrue(self._consumer.has_acknowledged(read_message))
 
     def test_requeuein_a_message(self):
-        """Given that I have an"""
+        """Given that I have an RMQ consumer
+            when I requeue a message
+            then it should return to the end of the queue
+        """
+        request = TestMessage()
+        header = BrightsideMessageHeader(uuid4(), self.test_topic, BrightsideMessageType.command)
+        body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(), BrightsideMessageBodyType.application_json)
+        message = BrightsideMessage(header, body)
 
+        self._consumer.purge()
+
+        self._producer.send(message)
+
+        read_message = self._consumer.receive(3)
+
+        self._consumer.requeue(read_message)
+
+        # should now be able to receive it again
+        reread_message = self._consumer.receive(3)
+        self._consumer.acknowledge(reread_message)
+
+        self.assertEqual(message.id, reread_message.id)
+        self.assertEqual(message.body.value, reread_message.body.value)
+        self.assertTrue(self._consumer.has_acknowledged(reread_message))
 
     def test_posting_object_state(self):
         """Given that I have an RMQ producer

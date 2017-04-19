@@ -184,12 +184,12 @@ class KombuMessageFactory:
 
         def _add_correlation_id(brightstide_message_header: Dict, correlation_id: UUID) -> None:
             if correlation_id is not None:
-                brightstide_message_header[message_correlation_id_header] = correlation_id
+                brightstide_message_header[message_correlation_id_header] = str(correlation_id)
 
         def _add_message_id(brightside_message_header: Dict, identity: UUID) -> None:
             if identity is None:
                 raise MessagingException("Missing id on message, this is a required field")
-            brightside_message_header[message_id_header] = identity
+            brightside_message_header[message_id_header] = str(identity)
 
         def _add_message_type(brightside_message_header: Dict, brightside_message_type: BrightsideMessageType) -> None:
             if brightside_message_type is None:
