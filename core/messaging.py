@@ -203,16 +203,3 @@ class BrightsideConsumer(metaclass=ABCMeta):
     def requeue(self, message) -> None:
         pass
 
-
-class BrightsideMessageFactory:
-    """Used to create specific message, particularly the quit message used to terminate a channel"""
-
-    @staticmethod
-    def create_null_message():
-        return BrightsideMessage(BrightsideMessageHeader(uuid4(), "", BrightsideMessageType.none), BrightsideMessageBody(""))
-
-    @staticmethod
-    def create_quit_message():
-        body = BrightsideMessageBody(body="")
-        header = BrightsideMessageHeader(uuid4(), topic="", message_type=BrightsideMessageType.quit)
-        return BrightsideMessage(header, body)

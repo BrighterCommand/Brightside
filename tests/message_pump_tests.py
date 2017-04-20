@@ -38,7 +38,8 @@ from arame.messaging import JsonRequestSerializer
 from core.command_processor import CommandProcessor
 from core.exceptions import ConfigurationException, DeferMessageException
 from core.channels import Channel
-from core.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideMessageBodyType, BrightsideMessageHeader, BrightsideMessageType, BrightsideMessageFactory
+from core.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideMessageBodyType, BrightsideMessageHeader, BrightsideMessageType
+from core.message_factory import create_quit_message
 from serviceactivator.message_pump import MessagePump
 
 from tests.handlers_testdoubles import MyCommandHandler, MyCommand, map_to_request
@@ -65,7 +66,7 @@ class MessagePumpFixture(unittest.TestCase):
                                      BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
 
-        quit_message = BrightsideMessageFactory.create_quit_message()
+        quit_message = create_quit_message()
 
         # add messages to that when channel is called it returns first message then quit message
         response_queue = [message, quit_message]
@@ -99,7 +100,7 @@ class MessagePumpFixture(unittest.TestCase):
                                      BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
 
-        quit_message = BrightsideMessageFactory.create_quit_message()
+        quit_message = create_quit_message()
 
         # add messages to that when channel is called it returns first message then qui tmessage
         response_queue = [message, quit_message]
@@ -134,7 +135,7 @@ class MessagePumpFixture(unittest.TestCase):
                                      BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
 
-        quit_message = BrightsideMessageFactory.create_quit_message()
+        quit_message = create_quit_message()
 
         # add messages to that when channel is called it returns first message then qui tmessage
         response_queue = [message, quit_message]
@@ -172,7 +173,7 @@ class MessagePumpFixture(unittest.TestCase):
         message_three = BrightsideMessage(header, body)
         message_four = BrightsideMessage(header, body)
 
-        quit_message = BrightsideMessageFactory.create_quit_message()
+        quit_message = create_quit_message()
 
         # add messages to that when channel is called it returns first message then qui tmessage
         response_queue = [message_one, message_two, message_three, message_four, quit_message]
@@ -206,7 +207,7 @@ class MessagePumpFixture(unittest.TestCase):
                                      BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
 
-        quit_message = BrightsideMessageFactory.create_quit_message()
+        quit_message = create_quit_message()
 
         # add messages to that when channel is called it returns first message then qui tmessage
         response_queue = [message, quit_message]

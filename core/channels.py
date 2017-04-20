@@ -32,7 +32,8 @@ from enum import Enum
 from queue import Queue
 
 from core.exceptions import ChannelFailureException
-from core.messaging import BrightsideConsumer, BrightsideMessage, BrightsideMessageFactory
+from core.messaging import BrightsideConsumer, BrightsideMessage
+from core.message_factory import create_quit_message
 
 
 class ChannelState(Enum):
@@ -91,7 +92,7 @@ class Channel:
         return self._state
 
     def stop(self):
-        self._queue.put(BrightsideMessageFactory.create_quit_message())
+        self._queue.put(create_quit_message())
         self._state = ChannelState.stopping
 
     def requeue(self, message):

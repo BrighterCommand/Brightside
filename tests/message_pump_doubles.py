@@ -32,7 +32,8 @@ THE SOFTWARE.
 from queue import Queue
 
 from core.channels import ChannelFailureException, ChannelName, ChannelState
-from core.messaging import BrightsideMessage, BrightsideMessageFactory
+from core.messaging import BrightsideMessage
+from core.message_factory import create_null_message, create_quit_message
 
 
 class FakeChannel:
@@ -65,7 +66,7 @@ class FakeChannel:
             self._state = ChannelState.started
 
         if not self._queue.empty():
-            return BrightsideMessageFactory.create_null_message()
+            return create_null_message()
 
         return self._queue.get(block=True, timeout=timeout)
 
@@ -74,7 +75,7 @@ class FakeChannel:
         return self._state
 
     def stop(self):
-        self._queue.put(BrightsideMessageFactory.create_quit_message())
+        self._queue.put(create_quit_message())
         self._state = ChannelState.stopping
 
     def requeue(self, message):
