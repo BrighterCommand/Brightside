@@ -29,9 +29,11 @@ THE SOFTWARE.
 ***********************************************************************
 """
 
+from threading import Event, Thread
 import unittest
 from unittest.mock import Mock, call
 from uuid import uuid4
+import pdb
 import time
 
 from arame.messaging import JsonRequestSerializer
@@ -249,11 +251,19 @@ class MessagePumpFixture(unittest.TestCase):
 
         command_processor.configure_mock(**requeue_spec)
 
-        message_pump.run()
+        started_event = Event()
+
+        t = Thread(target=message_pump.run, args=(started_event,))
+
+        t.start()
+
+        started_event.wait()
 
         time.sleep(1)
 
         channel.stop()
+
+        t.join()
 
         self.assertTrue(command_processor.send.call_count, 3)
 

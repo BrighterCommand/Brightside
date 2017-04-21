@@ -32,7 +32,7 @@ THE SOFTWARE.
 import logging
 import time
 from typing import Callable
-from threading import current_thread
+from threading import current_thread, Event
 
 from core.command_processor import CommandProcessor, Request
 from core.channels import Channel
@@ -56,7 +56,12 @@ class MessagePump:
         self._unacceptable_message_count = 0
         self._requeue_count = requeue_count
 
-    def run(self) -> None:
+    def run(self, started_event: Event = None) -> None:
+
+        # Can be used to signal that we have started to caller
+        if started_event is not None:
+            started_event.set()
+
         while True:
 
             if self._unacceptable_message_limit_reached():
@@ -65,14 +70,17 @@ class MessagePump:
 
             message = None
             try:
-                self._logger.debug("MessagePump: Receiving messages from {} on thread # {}".format(self._channel.name, current_thread().name))
+                self._logger.debug("MessagePump: Receiving messages from {} on thread # {}".format(
+                    self._channel.name, current_thread().name))
 
                 message = self._channel.receive(self._timeout)
             except ChannelFailureException:
-                self._logger.warn("MessagePump: ChannelFailureException receiving messages from {} on thread # {}".format(self._channel.name, current_thread().name))
+                self._logger.warn("MessagePump: ChannelFailureException receiving messages from {} on thread # {}".format(
+                    self._channel.name, current_thread().name))
                 continue
             except Exception:
-                self._logger.warn("MessagePump: Exception receiving messages from {} on thread # {}".format(self._channel.name, current_thread().name))
+                self._logger.warn("MessagePump: Exception receiving messages from {} on thread # {}".format(
+                    self._channel.name, current_thread().name))
 
             if message is None:
                 raise ChannelFailureException("Could not receive message. Note that should return BrightsideMessageType.none from an emoty queeu")
@@ -80,10 +88,12 @@ class MessagePump:
                 time.sleep(self._timeout)
                 continue
             elif message.header.message_type == BrightsideMessageType.quit:
-                self._logger.debug("MessagePump: Quite receiving messages from {} on thread # ".format(self._channel.name, current_thread().name))
+                self._logger.debug("MessagePump: Quite receiving messages from {} on thread # ".format(
+                    self._channel.name, current_thread().name))
                 break
             elif message.header.message_type == BrightsideMessageType.unacceptable:
-                self._logger.debug("MessagePump: Failed to parse a message from the incoming message with id () from {} on thread # ".format(message.id, self._channel.name(), current_thread().name))
+                self._logger.debug("MessagePump: Failed to parse a message from the incoming message with id () from {} on thread # ".format(
+                    message.id, self._channel.name, current_thread().name))
                 self._acknowledge_message(message)
                 self._increment_unacceptable_message_count()
                 continue
@@ -99,10 +109,12 @@ class MessagePump:
 
             self._acknowledge_message(message)
 
-        self._logger.debug("MessagePump: Finished running message loop, no longer receiving messages from {} on thread # {}".format(self._channel.name(), current_thread().name))
+        self._logger.debug("MessagePump: Finished running message loop, no longer receiving messages from {} on thread # {}".format(
+            self._channel.name, current_thread().name))
 
     def _acknowledge_message(self, message: BrightsideMessage) -> None:
-        self._logger.debug("MessagePump: Acknowledge message {} from {} on thread # {}".format(message.id, self._channel.name(), current_thread().name))
+        self._logger.debug("MessagePump: Acknowledge message {} from {} on thread # {}".format(
+            message.id, self._channel.name, current_thread().name))
         self._channel.acknowledge(message)
 
     def _discard_requeued_messages_enabled(self):
@@ -123,13 +135,13 @@ class MessagePump:
 
         if self._discard_requeued_messages_enabled():
             if message.handled_count_reached(self._requeue_count):
-                self._logger.error("MessagePump: Have tried {} times to handle this message {} dropping message \n. Message Body {} ",
-                    self._requeue_count, message.id, message.body.value)
+                self._logger.error("MessagePump: Have tried {} times to handle this message {} dropping message \n. Message Body {} ".format(
+                    self._requeue_count, message.id, message.body.value))
                 self._channel.acknowledge(message)
                 return
 
-        self._logger.debug("MessagePump: Re-queueing message {} from {}",
-                message.id, self._channel.name)
+        self._logger.debug("MessagePump: Re-queueing message {} from {}".format(
+                message.id, self._channel.name))
         self._channel.requeue(message)
 
     def _translate_message(self, message: BrightsideMessage)-> Request:

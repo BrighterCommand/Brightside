@@ -65,7 +65,7 @@ class FakeChannel:
         if self._state is ChannelState.initialized:
             self._state = ChannelState.started
 
-        if not self._queue.empty():
+        if self._queue.empty():
             return create_null_message()
 
         return self._queue.get(block=True, timeout=timeout)
