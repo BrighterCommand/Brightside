@@ -28,33 +28,57 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ***********************************************************************
 """
-from multiprocessing import Event, Process
+from multiprocessing import Array, Event, Process, Queue
 
-from core.channels import Channel
-from serviceactivator.message_pump import MessagePump
+from arame.gateway import ArameConnection
+from core.message_factory import create_quit_message
+from core.messaging import BrightsideConsumerConfiguration
 
 
 class Performer:
-    def __init__(self, channel: Channel, message_pump: MessagePump):
+    def __init__(self, connection: ArameConnection, consumer_configuration: BrightsideConsumerConfiguration) -> None:
         """
-        We assume that the channel is the one the message pump operates on i.e. the queue of work
-        We need a separate reference to it, so that we can signal termination
-
-        TODO: We need to pass the channel's queue as a parameter to the pump as this is how we do
-        inter-process communication with the multi-processing library.
-        We need to switch to use multiprocessing.Queue
+        Each Peformer abstracts a process running a message pump.
+        That process is forked from the parent, as we cannot guarantee a message pump is only I/O bound and thus will
+        not scale because of the GIL.
+        The Performer is how the supervisor (the dispatcher) tracks the workers it has created
+        The Performer needs:
+            A queue, whose purpose is to allow stop messages to be sent to the channel
+            The properties needed to create a message pump or channel in the run method (which executes in the
+            separate process) that can be communicatd to the child process via shared memory
         """
-        self._channel = channel
-        self._message_pump =message_pump
+        self._pipeline = Queue()
+        self._connection = connection
+        self._consumer_configuration = consumer_configuration
 
     def stop(self) -> None:
-        self._channel.stop()
+        self._pipeline.put(create_quit_message())
 
     def run(self) -> Process:
         event = Event()
-        p = Process(target=self._message_pump.run, args=(event,))
+        params = Array()
+        p = Process(target=_sub_process_main, args=(event, self._pipeline, self._connection, self._consumer_configuration))
         p.start()
 
         event.wait(timeout=1)
 
         return p
+
+
+def _sub_process_main(event: Event, pipeline: Queue, connection: ArameConnection,
+                     consumer_configuration: BrightsideConsumerConfiguration) -> None:
+    """
+    This is the main method for the sub=process, everything we need to create the message pump and
+    channelt needs to be passed in as parameters that can be pickled as when we run they will be serialized
+    into this process. The data should be value types, not reference types as we will receive a copy of the original.
+    Inter-process communication is signalled by the event - to indicate startup - and the pipeline to facilitate a
+    sentinel or stop message
+    :param event:
+    :param pipeline:
+    :param connection:
+    :param consumer_configuration:
+    :return: 
+    """
+
+    pass
+

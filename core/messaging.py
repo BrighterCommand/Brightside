@@ -32,6 +32,7 @@ THE SOFTWARE.
 from uuid import UUID, uuid4
 from abc import ABCMeta, abstractmethod
 from enum import Enum, unique
+import logging
 
 
 class BrightsideMessageBodyType:
@@ -173,6 +174,24 @@ class BrightsideProducer(metaclass=ABCMeta):
     @abstractmethod
     def send(self, message: BrightsideMessage):
         pass
+
+
+class BrightsideConsumerConfiguration:
+    """
+    A class to encapsulate the configuration required to create a Brightside Consumer
+    Required because we need to pass the parameters to a performer that runs the message pump on another thread
+    """
+    def __init__(self, queue_name: str, routing_key: str, prefetch_count: int=1, is_durable: bool=False):
+        self._queue_name = queue_name
+        self._routing_key = routing_key
+        self._prefetch_count = prefetch_count
+        self._is_durable = is_durable
+
+    @property
+    def queue_name(self):
+        return self._queue_name
+
+    #TODO: Add properties, then replace ArameConsumer use of explicit parameters
 
 
 class BrightsideConsumer(metaclass=ABCMeta):

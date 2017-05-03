@@ -29,7 +29,7 @@ THE SOFTWARE.
 ***********************************************************************
 """
 from enum import Enum
-from queue import Queue
+from multiprocessing import Queue
 
 from core.exceptions import ChannelFailureException
 from core.messaging import BrightsideConsumer, BrightsideMessage
@@ -56,10 +56,16 @@ class ChannelName:
 
 
 class Channel:
-    def __init__(self, name: str, consumer: BrightsideConsumer) -> None:
+    """
+    A queue for one data type
+    Uses BrightsideConsumer to be independent of the underlying implementation of the consumer i.e. rmq, redis, etc.
+    It uses a buffer over the backing service queue, this allows us to insert control messages into the channel.
+    We use control message to stop the consumption of messages from the channel
+    """
+    def __init__(self, name: str, consumer: BrightsideConsumer, pipeline: Queue) -> None:
         self._consumer = consumer
         self._name = ChannelName(name)
-        self._queue = Queue()
+        self._queue = pipeline
         self._state = ChannelState.initialized
 
     def __len__(self):
@@ -97,7 +103,6 @@ class Channel:
 
     def requeue(self, message):
         self._consumer.requeue(message)
-
 
 
 
