@@ -188,10 +188,20 @@ class BrightsideConsumerConfiguration:
         self._is_durable = is_durable
 
     @property
-    def queue_name(self):
+    def queue_name(self) -> str:
         return self._queue_name
 
-    #TODO: Add properties, then replace ArameConsumer use of explicit parameters
+    @property
+    def routing_key(self) -> str:
+        return self._routing_key
+
+    @property
+    def prefetch_count(self) -> int:
+        return self._prefetch_count
+
+    @property
+    def is_durable(self) -> bool:
+        return self._is_durable
 
 
 class BrightsideConsumer(metaclass=ABCMeta):

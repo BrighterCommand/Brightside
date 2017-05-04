@@ -36,7 +36,7 @@ from uuid import uuid4
 from tests.messaging_testdoubles import TestMessage
 from arame.gateway import ArameConsumer, ArameConnection, ArameProducer
 from arame.messaging import JsonRequestSerializer
-from core.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideMessageBodyType, BrightsideMessageHeader, BrightsideMessageType
+from core.messaging import BrightsideMessage, BrightsideConsumerConfiguration, BrightsideMessageBody, BrightsideMessageBodyType, BrightsideMessageHeader, BrightsideMessageType
 
 
 class ArameGatewayTests(unittest.TestCase):
@@ -46,7 +46,7 @@ class ArameGatewayTests(unittest.TestCase):
     def setUp(self):
         self._connection = ArameConnection("amqp://guest:guest@localhost:5672//", "paramore.brighter.exchange", is_durable=True)
         self._producer = ArameProducer(self._connection)
-        self._consumer = ArameConsumer(self._connection, "brightside_tests", self.test_topic)
+        self._consumer = ArameConsumer(self._connection, BrightsideConsumerConfiguration("brightside_tests", self.test_topic))
 
     def test_posting_a_message(self):
         """Given that I have an RMQ message producer

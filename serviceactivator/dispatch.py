@@ -30,15 +30,17 @@ THE SOFTWARE.
 """
 from multiprocessing import Array, Event, Process, Queue
 
-from arame.gateway import ArameConnection
+from arame.gateway import ArameConnection, ArameConsumer
+from core.channels import Channel
 from core.message_factory import create_quit_message
 from core.messaging import BrightsideConsumerConfiguration
+from serviceactivator.message_pump import MessagePump
 
 
 class Performer:
-    def __init__(self, connection: ArameConnection, consumer_configuration: BrightsideConsumerConfiguration) -> None:
+    def __init__(self, channel_name: str, connection: ArameConnection, consumer_configuration: BrightsideConsumerConfiguration) -> None:
         """
-        Each Peformer abstracts a process running a message pump.
+        Each Performer abstracts a process running a message pump.
         That process is forked from the parent, as we cannot guarantee a message pump is only I/O bound and thus will
         not scale because of the GIL.
         The Performer is how the supervisor (the dispatcher) tracks the workers it has created
@@ -48,6 +50,7 @@ class Performer:
             separate process) that can be communicatd to the child process via shared memory
         """
         self._pipeline = Queue()
+        self._channel_name = channel_name
         self._connection = connection
         self._consumer_configuration = consumer_configuration
 
@@ -56,8 +59,7 @@ class Performer:
 
     def run(self) -> Process:
         event = Event()
-        params = Array()
-        p = Process(target=_sub_process_main, args=(event, self._pipeline, self._connection, self._consumer_configuration))
+        p = Process(target=_sub_process_main, args=(event, self._pipeline, self._channel_name, self._connection, self._consumer_configuration))
         p.start()
 
         event.wait(timeout=1)
@@ -65,11 +67,11 @@ class Performer:
         return p
 
 
-def _sub_process_main(event: Event, pipeline: Queue, connection: ArameConnection,
+def _sub_process_main(event: Event, pipeline: Queue, channel_name: str, connection: ArameConnection,
                      consumer_configuration: BrightsideConsumerConfiguration) -> None:
     """
     This is the main method for the sub=process, everything we need to create the message pump and
-    channelt needs to be passed in as parameters that can be pickled as when we run they will be serialized
+    channel it needs to be passed in as parameters that can be pickled as when we run they will be serialized
     into this process. The data should be value types, not reference types as we will receive a copy of the original.
     Inter-process communication is signalled by the event - to indicate startup - and the pipeline to facilitate a
     sentinel or stop message
@@ -77,8 +79,14 @@ def _sub_process_main(event: Event, pipeline: Queue, connection: ArameConnection
     :param pipeline:
     :param connection:
     :param consumer_configuration:
-    :return: 
+    :return:
     """
 
-    pass
+    #TODO: Create stdout logger for sub-process
+    consumer = ArameConsumer(connection=connection, configuration=consumer_configuration)
+    channel = Channel(name=channel_name, consumer=consumer, pipeline=pipeline)
+
+    #TODO: Fix missing dependencies, including defaults that need passed in config values
+    message_pump = MessagePump(command_processor=None, channel=channel, mapper_func=None,
+                               timeout=500, unacceptable_message_limit=-1, requeue_count=3)
 

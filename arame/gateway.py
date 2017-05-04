@@ -40,7 +40,7 @@ from kombu import exceptions as kombu_exceptions
 from kombu.message import Message as KombuMessage
 
 from core.exceptions import ChannelFailureException
-from core.messaging import BrightsideConsumer, BrightsideMessage, BrightsideProducer, BrightsideMessageHeader, BrightsideMessageBody, BrightsideMessageType
+from core.messaging import BrightsideConsumer, BrightsideConsumerConfiguration, BrightsideMessage, BrightsideProducer, BrightsideMessageHeader, BrightsideMessageBody, BrightsideMessageType
 from arame.messaging import ArameMessageFactory, KombuMessageFactory
 
 
@@ -143,15 +143,14 @@ class ArameConsumer(BrightsideConsumer):
         'max_retries': 3,
     }
 
-    def __init__(self, connection: ArameConnection, queue_name: str, routing_key: str, prefetch_count: int=1,
-                 is_durable: bool=False, logger: logging.Logger=None) -> None:
+    def __init__(self, connection: ArameConnection, configuration: BrightsideConsumerConfiguration, logger: logging.Logger=None) -> None:
         self._exchange = Exchange(connection.exchange, type=connection.exchange_type, durable=connection.is_durable)
-        self._routing_key = routing_key
+        self._routing_key = configuration.routing_key
         self._amqp_uri = connection.amqp_uri
-        self._queue_name = queue_name
-        self._routing_key = routing_key
-        self._prefetch_count = prefetch_count
-        self._is_durable = is_durable
+        self._queue_name = configuration.queue_name
+        self._routing_key = configuration.routing_key
+        self._prefetch_count = configuration.prefetch_count
+        self._is_durable = configuration.is_durable
         self._message_factory = ArameMessageFactory()
         self._logger = logger or logging.getLogger(__name__)
         self._queue = Queue(self._queue_name, exchange=self._exchange, routing_key=self._routing_key)
