@@ -75,10 +75,11 @@ def _sub_process_main(event: Event, pipeline: Queue, channel_name: str, connecti
     into this process. The data should be value types, not reference types as we will receive a copy of the original.
     Inter-process communication is signalled by the event - to indicate startup - and the pipeline to facilitate a
     sentinel or stop message
-    :param event:
-    :param pipeline:
-    :param connection:
-    :param consumer_configuration:
+    :param event: Used by the sub-process to signal that it is ready
+    :param pipeline: Used to communicates 'stop' messages to the pump
+    :param channel_name: The name we want to give the channel to the broker for identification
+    :param connection: The 'broker' connection
+    :param consumer_configuration: How to configure our consumer of messages from the channel
     :return:
     """
 
