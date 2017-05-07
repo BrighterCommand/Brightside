@@ -31,9 +31,8 @@ THE SOFTWARE.
 
 from threading import Event, Thread
 import unittest
-from unittest.mock import Mock, call
+from unittest.mock import Mock
 from uuid import uuid4
-import pdb
 import time
 
 from arame.messaging import JsonRequestSerializer
@@ -118,7 +117,6 @@ class MessagePumpFixture(unittest.TestCase):
         self.assertTrue(excepton_caught)
 
 
-    # TODO: Unmappable message
     def test_the_pump_should_acknowledge_and_discard_an_unacceptable_message(self):
         """
             Given that I have a message pump for a channel
