@@ -127,3 +127,18 @@ def _sub_process_main(started_event: Event,
     logger.debug("Starting the message pump for %s", channel_name)
     message_pump.run(started_event)
 
+
+class Dispatcher:
+    """
+    The dispatcher orchestrates the creation of consumers, where a consumer is the sub-process that runs a message pump
+    to consumer messages from a given channel and dispatch to handlers. The dispatcher can start more than one performer
+    for a given channel.
+    The dispatcher also orchestrates the shutdown of consumers. It does this by posting a stop message into each running
+    consumers queue, thus allowing the current handler to run to completion but killing the consumer before it can
+    consume another work item from the queue.
+    As such the dispatcher tracks consumer instances.
+    In addition, as we must pass a factory method to the sub-process that creates the command processor for that channel
+    i.e. handler and policy registration, outgoing queues, the Dispatcher also acts a registry of those factory methods
+    for individual channels.
+    """
+    pass

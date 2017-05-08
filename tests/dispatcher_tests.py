@@ -78,6 +78,9 @@ class PerformerFixture(unittest.TestCase):
         self.assertTrue(True)
 
 
+class DispatcherFixture(unittest.TestCase):
+    pass
+
 
 
 
