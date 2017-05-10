@@ -79,7 +79,11 @@ class PerformerFixture(unittest.TestCase):
 
 
 class DispatcherFixture(unittest.TestCase):
-    pass
+    def test_stop_consumer(self):
+        """Given that I have a dispatcher
+            When I stop a consumer
+            Then the performer should terminate
+        """
 
 
 
