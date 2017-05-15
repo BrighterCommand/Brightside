@@ -28,24 +28,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ***********************************************************************
 """
+from enum import Enum
 from multiprocessing import Event, Process, Queue
 import logging
-from typing import Callable
+from typing import Callable, List
 
-from arame.gateway import ArameConnection, ArameConsumer
+from core.connection import Connection
 from core.channels import Channel
 from core.command_processor import CommandProcessor, Request
 from core.message_factory import create_quit_message
-from core.messaging import BrightsideConsumerConfiguration, BrightsideMessage
+from core.messaging import BrightsideConsumerConfiguration, BrightsideConsumer, BrightsideMessage
 from serviceactivator.message_pump import MessagePump
 
 
 class Performer:
     def __init__(self,
                  channel_name: str,
-                 pipeline: Queue,
-                 connection: ArameConnection,
+                 connection: Connection,
                  consumer_configuration: BrightsideConsumerConfiguration,
+                 consumer_factory: Callable[[Connection, BrightsideConsumerConfiguration, logging.Logger], BrightsideConsumer],
                  command_processor_factory: Callable[[str], CommandProcessor],
                  mapper_func: Callable[[BrightsideMessage], Request],
                  logger: logging.Logger=None
@@ -58,27 +59,34 @@ class Performer:
         The Performer needs:
         :param channel_name: The name of the channel we want to create a sub-process for
         :param connection: The connection to the broker
-        :param We need a user supplied callback to create a commandprocessor with subscribers, policies, mappers etc.
-        :param We need a user supplied callback to map on the wire messages to requests
+        :param consumer_factory: We need a user supplied callback to provide us an instance of the concumer for
+            the broker we are using. Arame? Something else?
+        :param command_processor_factory: We need a user supplied callback to create a commandprocessor with
+            subscribers, policies, outgoing tasks queues etc.
+        :param mapper_func: We need a user supplied callback to map on the wire messages to requests
         """
         # TODO: The paramater needs to be a connection, not an AramaConnection as we can't decide to create an Arame Consumer
         # here. Where do we make that choice?
 
-        self._pipeline = pipeline
         self._channel_name = channel_name
         self._connection = connection
         self._consumer_configuration = consumer_configuration
+        self._consumer_factory = consumer_factory
         self._command_processor_factory = command_processor_factory
         self._mapper_func = mapper_func
         self._logger = logger or logging.getLogger(__name__)
 
     def stop(self) -> None:
-        self._pipeline.put(create_quit_message())
+        self._consumer_configuration.pipeline.put(create_quit_message())
 
     def run(self, started_event: Event) -> Process:
 
         p = Process(target=_sub_process_main, args=(
-            started_event, self._pipeline, self._channel_name, self._connection, self._consumer_configuration,
+            started_event,
+            self._channel_name,
+            self._connection,
+            self._consumer_configuration,
+            self._consumer_factory,
             self._command_processor_factory,
             self._mapper_func))
 
@@ -93,10 +101,10 @@ class Performer:
 
 
 def _sub_process_main(started_event: Event,
-                      pipeline: Queue,
                       channel_name: str,
-                      connection: ArameConnection,
+                      connection: Connection,
                       consumer_configuration: BrightsideConsumerConfiguration,
+                      consumer_factory: Callable[[Connection, BrightsideConsumerConfiguration, logging.Logger], BrightsideConsumer],
                       command_processor_factory: Callable[[str], CommandProcessor],
                       mapper_func: Callable[[BrightsideMessage], Request]) -> None:
     """
@@ -106,18 +114,20 @@ def _sub_process_main(started_event: Event,
     Inter-process communication is signalled by the event - to indicate startup - and the pipeline to facilitate a
     sentinel or stop message
     :param started_event: Used by the sub-process to signal that it is ready
-    :param pipeline: Used to communicates 'stop' messages to the pump
     :param channel_name: The name we want to give the channel to the broker for identification
     :param connection: The 'broker' connection
     :param consumer_configuration: How to configure our consumer of messages from the channel
-    :param command_processor_factory: We need to register subscribers, policies, and task queues in this script
+    :param consumer_factory: Callback to create the consumer. User code as we don't know what consumer library they
+        want to use. Arame? Something else?
+    :param command_processor_factory: Callback to  register subscribers, policies, and task queues then build command
+        processor. User code that provides us with their requests and handlers
     :param mapper_func: We need to map between messages on the wire and our handlers
     :return:
     """
 
     logger = logging.getLogger(__name__)
-    consumer = ArameConsumer(connection=connection, configuration=consumer_configuration, logger=logger)
-    channel = Channel(name=channel_name, consumer=consumer, pipeline=pipeline)
+    consumer = consumer_factory(connection, consumer_configuration, logger)
+    channel = Channel(name=channel_name, consumer=consumer, pipeline=consumer_configuration.pipeline)
 
     #TODO: Fix defaults that need passed in config values
     command_processor = command_processor_factory(channel_name)
@@ -126,6 +136,45 @@ def _sub_process_main(started_event: Event,
 
     logger.debug("Starting the message pump for %s", channel_name)
     message_pump.run(started_event)
+
+
+class ConsumerConfiguration:
+    def __init__(self,
+                 connection: Connection,
+                 consumer: BrightsideConsumerConfiguration,
+                 consumer_factory: Callable[[Connection, BrightsideConsumerConfiguration, logging.Logger], BrightsideConsumer],
+                 mapper_func: Callable[[BrightsideMessage], Request]) -> None:
+        """
+        The configuration parameters for one consumer - can create one or more performers from this, each of which is
+        a message pump reading froma queue
+        :param connection:
+        :param consumer:
+        :param consumer_factory:
+        :param mapper_func:
+        """
+        self._connection = connection
+        self._consumer = consumer
+        self._consumer_factory = consumer_factory
+        self._mapper_func = mapper_func
+
+    @property
+    def connection(self) -> Connection:
+        return self._connection
+
+    @property
+    def consumers(self) -> BrightsideConsumerConfiguration:
+        return self._consumer
+
+    @property
+    def consumer_factory(self) -> Callable[[Connection, BrightsideConsumerConfiguration, logging.Logger], BrightsideConsumer]:
+        return self._consumer_factory
+
+    @property
+    def mapper_func(self) -> Callable[[BrightsideMessage], Request]:
+        return self._mapper_func
+
+class DispatcherState(Enum):
+    ds_awaiting = 0
 
 
 class Dispatcher:
@@ -141,4 +190,4 @@ class Dispatcher:
     i.e. handler and policy registration, outgoing queues, the Dispatcher also acts a registry of those factory methods
     for individual channels.
     """
-    pass
+    def __init__(self, connections):

@@ -29,8 +29,12 @@ THE SOFTWARE.
 ***********************************************************************
 """
 from unittest.mock import Mock
+import logging
 
+from arame.gateway import ArameConsumer
 from core.command_processor import CommandProcessor
+from core.connection import Connection
+from core.messaging import BrightsideConsumer, BrightsideConsumerConfiguration
 
 
 def mock_command_processor_factory(channel_name:str):
@@ -40,3 +44,14 @@ def mock_command_processor_factory(channel_name:str):
     """
     command_processor = Mock(spec=CommandProcessor)
     return command_processor
+
+
+def mock_consumer_factory(connection: Connection, consumer_configuration: BrightsideConsumerConfiguration,
+                          logger: logging.Logger):
+    consumer = Mock(spec=BrightsideConsumer)
+    return consumer
+
+
+def arame_consuemr_factory(connection: Connection, consumer_configuration: BrightsideConsumerConfiguration,
+                          logger: logging.Logger) -> BrightsideConsumer:
+    return ArameConsumer(connection=connection, configuration=consumer_configuration, logger=logger)

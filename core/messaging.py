@@ -32,7 +32,7 @@ THE SOFTWARE.
 from uuid import UUID, uuid4
 from abc import ABCMeta, abstractmethod
 from enum import Enum, unique
-import logging
+from multiprocessing import Queue
 
 
 class BrightsideMessageBodyType:
@@ -181,11 +181,16 @@ class BrightsideConsumerConfiguration:
     A class to encapsulate the configuration required to create a Brightside Consumer
     Required because we need to pass the parameters to a performer that runs the message pump on another thread
     """
-    def __init__(self, queue_name: str, routing_key: str, prefetch_count: int=1, is_durable: bool=False):
+    def __init__(self, pipeline: Queue, queue_name: str, routing_key: str, prefetch_count: int=1, is_durable: bool=False):
+        self._pipeline = pipeline
         self._queue_name = queue_name
         self._routing_key = routing_key
         self._prefetch_count = prefetch_count
         self._is_durable = is_durable
+
+    @property
+    def pipeline(self):
+        return self._pipeline
 
     @property
     def queue_name(self) -> str:
