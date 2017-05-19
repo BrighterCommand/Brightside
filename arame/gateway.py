@@ -39,6 +39,7 @@ from kombu.pools import connections
 from kombu import exceptions as kombu_exceptions
 from kombu.message import Message as KombuMessage
 
+from core.connection import Connection
 from core.exceptions import ChannelFailureException
 from core.messaging import BrightsideConsumer, BrightsideConsumerConfiguration, BrightsideMessage, BrightsideProducer, BrightsideMessageHeader, BrightsideMessageBody, BrightsideMessageType
 from arame.messaging import ArameMessageFactory, KombuMessageFactory
@@ -54,7 +55,7 @@ class ArameProducer(BrightsideProducer):
         'max_retries': 3,
     }
 
-    def __init__(self, connection: ArameConnection, logger:logging.Logger=None) -> None:
+    def __init__(self, connection: Connection, logger:logging.Logger=None) -> None:
         self._amqp_uri = connection.amqp_uri
         self._cnx = BrokerConnection(hostname=connection.amqp_uri)
         self._exchange = Exchange(connection.exchange, type=connection.exchange_type, durable=connection.is_durable)
@@ -102,7 +103,7 @@ class ArameConsumer(BrightsideConsumer):
         'max_retries': 3,
     }
 
-    def __init__(self, connection: ArameConnection, configuration: BrightsideConsumerConfiguration, logger: logging.Logger=None) -> None:
+    def __init__(self, connection: Connection, configuration: BrightsideConsumerConfiguration, logger: logging.Logger=None) -> None:
         self._exchange = Exchange(connection.exchange, type=connection.exchange_type, durable=connection.is_durable)
         self._routing_key = configuration.routing_key
         self._amqp_uri = connection.amqp_uri
