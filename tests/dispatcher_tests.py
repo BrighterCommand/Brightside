@@ -37,7 +37,7 @@ from arame.messaging import JsonRequestSerializer
 from core.connection import Connection
 from core.messaging import BrightsideConsumerConfiguration, BrightsideMessageHeader, BrightsideMessageBody, \
     BrightsideMessage, BrightsideMessageType, BrightsideMessageBodyType
-from serviceactivator.dispatch import Dispatcher, DispatcherState, Performer
+from serviceactivator.dispatch import ConsumerConfiguration, Dispatcher, DispatcherState, Performer
 from tests.dispatcher_testdoubles import mock_command_processor_factory
 from tests.handlers_testdoubles import MyCommand, map_to_request
 
@@ -84,10 +84,12 @@ class DispatcherFixture(unittest.TestCase):
             When I stop a consumer
             Then the performer should terminate
         """
+        request = MyCommand()
         pipeline = Queue()
         connection = Connection("amqp://guest:guest@localhost:5762/%2f", "brightside.perfomer.exchange")
         configuration = BrightsideConsumerConfiguration(pipeline, "performer.test.queue", "brightside.tests.mycommand")
-        dispatcher = Dispatcher(mock_command_processor_factory, map_to_request, connection, [configuration, ])
+        consumer = ConsumerConfiguration(connection, configuration, mock_command_processor_factory, map_to_request)
+        dispatcher = Dispatcher({"MyCommand": consumer})
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
@@ -104,6 +106,10 @@ class DispatcherFixture(unittest.TestCase):
 
         dispatcher.end()
 
-        d.join
+        d.join()
+
+        self.assertEqual(dispatcher.state, DispatcherState.ds_stopped)
+
+
 
 

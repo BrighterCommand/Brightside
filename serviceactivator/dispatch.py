@@ -31,7 +31,7 @@ THE SOFTWARE.
 from enum import Enum
 from multiprocessing import Event, Process, Queue
 import logging
-from typing import Callable, List
+from typing import Callable, Dict
 
 from core.connection import Connection
 from core.channels import Channel
@@ -143,18 +143,21 @@ class ConsumerConfiguration:
                  connection: Connection,
                  consumer: BrightsideConsumerConfiguration,
                  consumer_factory: Callable[[Connection, BrightsideConsumerConfiguration, logging.Logger], BrightsideConsumer],
+                 command_processor_factory: Callable[[str], CommandProcessor],
                  mapper_func: Callable[[BrightsideMessage], Request]) -> None:
         """
         The configuration parameters for one consumer - can create one or more performers from this, each of which is
         a message pump reading froma queue
-        :param connection:
-        :param consumer:
-        :param consumer_factory:
-        :param mapper_func:
+        :param connection: The connection to the broker
+        :param consumer: The consumer we want to create (routing key, queue etc)
+        :param consumer_factory: A factory to create a consumer to read from a broker, a given implementation i.e. arame
+        :param the command processor factory creates a command procesoor configured for a pipeline
+        :param mapper_func: Maps between messages on the queue and requests (commnands/events)
         """
         self._connection = connection
         self._consumer = consumer
         self._consumer_factory = consumer_factory
+        self._command_processor_factory = command_processor_factory
         self._mapper_func = mapper_func
 
     @property
@@ -162,7 +165,7 @@ class ConsumerConfiguration:
         return self._connection
 
     @property
-    def consumers(self) -> BrightsideConsumerConfiguration:
+    def consumer(self) -> BrightsideConsumerConfiguration:
         return self._consumer
 
     @property
@@ -170,11 +173,19 @@ class ConsumerConfiguration:
         return self._consumer_factory
 
     @property
+    def command_processor_factory(self):
+        return self._command_processor_factory
+
+    @property
     def mapper_func(self) -> Callable[[BrightsideMessage], Request]:
         return self._mapper_func
 
+
 class DispatcherState(Enum):
-    ds_awaiting = 0
+    ds_awaiting = 0,
+    ds_notready = 1,
+    ds_running = 2,
+    ds_stopped = 3
 
 
 class Dispatcher:
@@ -190,4 +201,38 @@ class Dispatcher:
     i.e. handler and policy registration, outgoing queues, the Dispatcher also acts a registry of those factory methods
     for individual channels.
     """
-    def __init__(self, connections):
+    def __init__(self, consumers: Dict[str, ConsumerConfiguration]) -> None:
+        self._state = DispatcherState.ds_notready
+
+        self._consumers = {k: Performer(
+                            k,
+                            v.connection,
+                            v.consumer,
+                            v.consumer_factory,
+                            v.command_processor_factory,
+                            v.mapper_func)
+                           for k, v in consumers.items()}
+
+        self._running_performers = ()
+
+        self._state = DispatcherState.ds_awaiting
+
+    @property
+    def state(self):
+        return self._state
+
+    def receive(self):
+
+        if self._state == DispatcherState.ds_awaiting:
+            self._running_performers = {k: v.run() for k, v in self._consumers}
+            self._state = DispatcherState.ds_running
+
+    def end(self):
+        if self._state == DispatcherState.ds_running:
+            for channel, process in self._running_performers.items():
+                self._consumers[channel].stop()
+                process.join(120)
+
+        self._state = DispatcherState.ds_stopped
+
+        # Do we want to determine if any processes have failed to complete Within the time frame
