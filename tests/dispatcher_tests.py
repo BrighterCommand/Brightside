@@ -38,7 +38,7 @@ from core.connection import Connection
 from core.messaging import BrightsideConsumerConfiguration, BrightsideMessageHeader, BrightsideMessageBody, \
     BrightsideMessage, BrightsideMessageType, BrightsideMessageBodyType
 from serviceactivator.dispatch import ConsumerConfiguration, Dispatcher, DispatcherState, Performer
-from tests.dispatcher_testdoubles import mock_command_processor_factory
+from tests.dispatcher_testdoubles import mock_command_processor_factory, mock_consumer_factory
 from tests.handlers_testdoubles import MyCommand, map_to_request
 
 
@@ -54,7 +54,7 @@ class PerformerFixture(unittest.TestCase):
         pipeline = Queue()
         connection = Connection("amqp://guest:guest@localhost:5762/%2f", "brightside.perfomer.exchange")
         configuration = BrightsideConsumerConfiguration(pipeline, "performer.test.queue", "brightside.tests.mycommand")
-        performer = Performer("test_channel", connection, configuration, mock_command_processor_factory, map_to_request)
+        performer = Performer("test_channel", connection, configuration, mock_consumer_factory, mock_command_processor_factory, map_to_request)
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
@@ -88,7 +88,7 @@ class DispatcherFixture(unittest.TestCase):
         pipeline = Queue()
         connection = Connection("amqp://guest:guest@localhost:5762/%2f", "brightside.perfomer.exchange")
         configuration = BrightsideConsumerConfiguration(pipeline, "performer.test.queue", "brightside.tests.mycommand")
-        consumer = ConsumerConfiguration(connection, configuration, mock_command_processor_factory, map_to_request)
+        consumer = ConsumerConfiguration(connection, configuration, mock_consumer_factory, mock_command_processor_factory, map_to_request)
         dispatcher = Dispatcher({"MyCommand": consumer})
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
@@ -100,13 +100,11 @@ class DispatcherFixture(unittest.TestCase):
 
         self.assertEqual(dispatcher.state, DispatcherState.ds_awaiting)
 
-        d = dispatcher.receive()
+        dispatcher.receive()
 
         time.sleep(1)
 
         dispatcher.end()
-
-        d.join()
 
         self.assertEqual(dispatcher.state, DispatcherState.ds_stopped)
 

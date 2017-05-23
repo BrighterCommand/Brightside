@@ -29,8 +29,10 @@ THE SOFTWARE.
 ***********************************************************************
 """
 from enum import Enum
-from multiprocessing import Event, Process, Queue
+from multiprocessing import Event, Process
 import logging
+from threading import Thread
+import time
 from typing import Callable, Dict
 
 from core.connection import Connection
@@ -185,7 +187,8 @@ class DispatcherState(Enum):
     ds_awaiting = 0,
     ds_notready = 1,
     ds_running = 2,
-    ds_stopped = 3
+    ds_stopped = 3,
+    ds_stopping = 4
 
 
 class Dispatcher:
@@ -213,7 +216,8 @@ class Dispatcher:
                             v.mapper_func)
                            for k, v in consumers.items()}
 
-        self._running_performers = ()
+        self._running_performers = {}
+        self._supervisor = None
 
         self._state = DispatcherState.ds_awaiting
 
@@ -223,9 +227,19 @@ class Dispatcher:
 
     def receive(self):
 
+        def _receive(dispatcher: Dispatcher) -> None:
+            for k, v in self._consumers.items():
+                event = Event()
+                dispatcher._running_performers[k] = v.run(event)
+                event.wait(500)
+
+            while self._state == DispatcherState.ds_running:
+                time.sleep(5) # yield to avoid spinning, between checking for changes to state
+
         if self._state == DispatcherState.ds_awaiting:
-            self._running_performers = {k: v.run() for k, v in self._consumers}
+            self._supervisor = Thread(target=_receive, args=(self,))
             self._state = DispatcherState.ds_running
+            self._supervisor.start()
 
     def end(self):
         if self._state == DispatcherState.ds_running:
@@ -233,6 +247,12 @@ class Dispatcher:
                 self._consumers[channel].stop()
                 process.join(120)
 
+            self._state == DispatcherState.ds_stopping
+            self._supervisor.join()
+
         self._state = DispatcherState.ds_stopped
 
         # Do we want to determine if any processes have failed to complete Within the time frame
+
+
+
