@@ -203,6 +203,10 @@ class Dispatcher:
     In addition, as we must pass a factory method to the sub-process that creates the command processor for that channel
     i.e. handler and policy registration, outgoing queues, the Dispatcher also acts a registry of those factory methods
     for individual channels.
+    THe dispatcher uses a thread to 'stay running' until end is called. This means that receive is non-blocking. The
+    supervisor thread yields regularly to avoid spinning the CPU. This means there can be a delay between signalling to
+    end and the shutdown beginning.
+    Shutdown will finish work in progress, as it inserts a quit message in the queue that gets consumerd 'next'
     """
     def __init__(self, consumers: Dict[str, ConsumerConfiguration]) -> None:
         self._state = DispatcherState.ds_notready
@@ -227,17 +231,21 @@ class Dispatcher:
 
     def receive(self):
 
-        def _receive(dispatcher: Dispatcher) -> None:
+        def _receive(dispatcher: Dispatcher, initialized: Event) -> None:
             for k, v in self._consumers.items():
                 event = Event()
                 dispatcher._running_performers[k] = v.run(event)
-                event.wait(500)
+                event.wait(3) # TODO: Do we want to configure this polling interval?
+
+            initialized.set()
 
             while self._state == DispatcherState.ds_running:
-                time.sleep(5) # yield to avoid spinning, between checking for changes to state
+                time.sleep(5)  # yield to avoid spinning, between checking for changes to state
 
         if self._state == DispatcherState.ds_awaiting:
-            self._supervisor = Thread(target=_receive, args=(self,))
+            initialized = Event()
+            self._supervisor = Thread(target=_receive, args=(self, initialized))
+            initialized.wait(5)  # TODO: Should this be number of performs and configured wiath related?
             self._state = DispatcherState.ds_running
             self._supervisor.start()
 
@@ -245,10 +253,10 @@ class Dispatcher:
         if self._state == DispatcherState.ds_running:
             for channel, process in self._running_performers.items():
                 self._consumers[channel].stop()
-                process.join(120)
+                process.join(10)  # TODO: We really want to make this configurable
 
             self._state == DispatcherState.ds_stopping
-            self._supervisor.join()
+            self._supervisor.join(5)
 
         self._state = DispatcherState.ds_stopped
 
