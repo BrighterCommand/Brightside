@@ -35,7 +35,7 @@ from arame.gateway import ArameConsumer
 from core.command_processor import CommandProcessor
 from core.connection import Connection
 from core.messaging import BrightsideConsumer, BrightsideConsumerConfiguration
-
+from core.message_factory import create_null_message
 
 def mock_command_processor_factory(channel_name:str):
     """
@@ -49,6 +49,9 @@ def mock_command_processor_factory(channel_name:str):
 def mock_consumer_factory(connection: Connection, consumer_configuration: BrightsideConsumerConfiguration,
                           logger: logging.Logger):
     consumer = Mock(spec=BrightsideConsumer)
+    null_message = create_null_message()
+    consumer_spec = {"receive.return_value": null_message}
+    consumer.configure_mock(**consumer_spec)
     return consumer
 
 
