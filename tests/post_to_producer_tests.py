@@ -35,14 +35,14 @@ import unittest
 from core.registry import MessageMapperRegistry
 from tests.messaging_testdoubles import FakeMessageStore, FakeProducer
 from core.command_processor import CommandProcessor
-from tests.handlers_testdoubles import MyCommand, MyOtherCommand, map_to_message
+from tests.handlers_testdoubles import MyCommand, MyOtherCommand, map_mycommand_to_message
 from core.exceptions import ConfigurationException
 
 
 class PostTests(unittest.TestCase):
     def setUp(self):
         self._messageMapperRegistry = MessageMapperRegistry()
-        self._messageMapperRegistry.register(MyCommand, map_to_message)
+        self._messageMapperRegistry.register(MyCommand, map_mycommand_to_message)
 
         self._message_store = FakeMessageStore()
         self._producer = FakeProducer()

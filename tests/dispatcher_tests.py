@@ -39,7 +39,7 @@ from core.messaging import BrightsideConsumerConfiguration, BrightsideMessageHea
     BrightsideMessage, BrightsideMessageType, BrightsideMessageBodyType
 from serviceactivator.dispatch import ConsumerConfiguration, Dispatcher, DispatcherState, Performer
 from tests.dispatcher_testdoubles import mock_command_processor_factory, mock_consumer_factory
-from tests.handlers_testdoubles import MyCommand, map_to_request
+from tests.handlers_testdoubles import MyCommand, MyEvent, map_my_command_to_request, map_my_event_to_request
 
 
 class PerformerFixture(unittest.TestCase):
@@ -54,7 +54,7 @@ class PerformerFixture(unittest.TestCase):
         pipeline = Queue()
         connection = Connection("amqp://guest:guest@localhost:5762/%2f", "brightside.perfomer.exchange")
         configuration = BrightsideConsumerConfiguration(pipeline, "performer.test.queue", "brightside.tests.mycommand")
-        performer = Performer("test_channel", connection, configuration, mock_consumer_factory, mock_command_processor_factory, map_to_request)
+        performer = Performer("test_channel", connection, configuration, mock_consumer_factory, mock_command_processor_factory, map_my_command_to_request)
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
@@ -87,8 +87,8 @@ class DispatcherFixture(unittest.TestCase):
         request = MyCommand()
         pipeline = Queue()
         connection = Connection("amqp://guest:guest@localhost:5762/%2f", "brightside.perfomer.exchange")
-        configuration = BrightsideConsumerConfiguration(pipeline, "performer.test.queue", "brightside.tests.mycommand")
-        consumer = ConsumerConfiguration(connection, configuration, mock_consumer_factory, mock_command_processor_factory, map_to_request)
+        configuration = BrightsideConsumerConfiguration(pipeline, "dispatcher.test.queue", "brightside.tests.mycommand")
+        consumer = ConsumerConfiguration(connection, configuration, mock_consumer_factory, mock_command_processor_factory, map_my_command_to_request)
         dispatcher = Dispatcher({"MyCommand": consumer})
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
@@ -107,6 +107,72 @@ class DispatcherFixture(unittest.TestCase):
         dispatcher.end()
 
         self.assertEqual(dispatcher.state, DispatcherState.ds_stopped)
+
+    def test_restart_consumer(self):
+        """Given that I have a dispatcher with all consumers stopped
+            When I restart a consumer
+            Then the dispatcher should have one running consumer
+        """
+        connection = Connection("amqp://guest:guest@localhost:5762/%2f", "brightside.perfomer.exchange")
+
+        # First consumer
+        request = MyCommand()
+        pipeline_one = Queue()
+        configuration_one = BrightsideConsumerConfiguration(pipeline_one, "restart_command.test.queue", "brightside.tests.mycommand")
+        consumer_one = ConsumerConfiguration(connection, configuration_one, mock_consumer_factory, mock_command_processor_factory, map_my_command_to_request)
+
+        header_one = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
+        body_one = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
+                                     BrightsideMessageBodyType.application_json)
+        message_one = BrightsideMessage(header_one, body_one)
+
+        pipeline_one.put(message_one)
+
+        # Second consumer
+        event = MyEvent()
+        pipeline_two = Queue()
+        configuration_two = BrightsideConsumerConfiguration(pipeline_two, "restart_event.test.queue", "brightside.tests.myevent")
+        consumer_two = ConsumerConfiguration(connection, configuration_two, mock_consumer_factory, mock_command_processor_factory, map_my_event_to_request)
+
+        header_two = BrightsideMessageHeader(uuid4(), event.__class__.__name__, BrightsideMessageType.event)
+        body_two = BrightsideMessageBody(JsonRequestSerializer(request=event).serialize_to_json(),
+                                         BrightsideMessageBodyType.application_json)
+        message_two = BrightsideMessage(header_two, body_two)
+
+        pipeline_two.put_nowait(message_two)
+
+        # Dispatcher
+        dispatcher = Dispatcher({"consumer_one": consumer_one, "consumer_two": consumer_two})
+
+        # Consume the messages and stop
+        self.assertEqual(dispatcher.state, DispatcherState.ds_awaiting)
+
+        dispatcher.receive()
+
+        time.sleep(1)
+
+        dispatcher.end()
+
+        self.assertEqual(dispatcher.state, DispatcherState.ds_stopped)
+
+        #Now add a new message, restart a consumer, and eat
+        event_three = MyEvent()
+        header_three = BrightsideMessageHeader(uuid4(), event.__class__.__name__, BrightsideMessageType.event)
+        body_three = BrightsideMessageBody(JsonRequestSerializer(request=event_three).serialize_to_json(),
+                                         BrightsideMessageBodyType.application_json)
+        message_three = BrightsideMessage(header_three, body_three)
+
+        pipeline_two.put_nowait(message_three)
+
+        dispatcher.open("consumer_two")
+
+        time.sleep(1)
+
+        dispatcher.end()
+
+        self.assertEqual(dispatcher.state, DispatcherState.ds_stopped)
+
+
 
 
 

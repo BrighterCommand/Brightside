@@ -43,7 +43,7 @@ from core.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideM
 from core.message_factory import create_quit_message
 from serviceactivator.message_pump import MessagePump
 
-from tests.handlers_testdoubles import MyCommandHandler, MyCommand, map_to_request
+from tests.handlers_testdoubles import MyCommandHandler, MyCommand, map_my_command_to_request
 from tests.message_pump_doubles import FakeChannel
 
 
@@ -60,7 +60,7 @@ class MessagePumpFixture(unittest.TestCase):
         channel = Mock(spec=Channel)
         command_processor = Mock(spec=CommandProcessor)
 
-        message_pump = MessagePump(command_processor, channel, map_to_request)
+        message_pump = MessagePump(command_processor, channel, map_my_command_to_request)
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
@@ -128,7 +128,7 @@ class MessagePumpFixture(unittest.TestCase):
         channel = Mock(spec=Channel)
         command_processor = Mock(spec=CommandProcessor)
 
-        message_pump = MessagePump(command_processor, channel, map_to_request)
+        message_pump = MessagePump(command_processor, channel, map_my_command_to_request)
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.unacceptable)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
@@ -163,7 +163,7 @@ class MessagePumpFixture(unittest.TestCase):
         command_processor = Mock(spec=CommandProcessor)
         unacceptable_message_limit = 3
 
-        message_pump = MessagePump(command_processor, channel, map_to_request, unacceptable_message_limit=unacceptable_message_limit)
+        message_pump = MessagePump(command_processor, channel, map_my_command_to_request, unacceptable_message_limit=unacceptable_message_limit)
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.unacceptable)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
@@ -200,7 +200,7 @@ class MessagePumpFixture(unittest.TestCase):
         channel = Mock(spec=Channel)
         command_processor = Mock(spec=CommandProcessor)
 
-        message_pump = MessagePump(command_processor, channel, map_to_request)
+        message_pump = MessagePump(command_processor, channel, map_my_command_to_request)
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
@@ -236,7 +236,7 @@ class MessagePumpFixture(unittest.TestCase):
         channel = FakeChannel(name="MyCommand")
         command_processor = Mock(spec=CommandProcessor)
 
-        message_pump = MessagePump(command_processor, channel, map_to_request, requeue_count=3)
+        message_pump = MessagePump(command_processor, channel, map_my_command_to_request, requeue_count=3)
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),

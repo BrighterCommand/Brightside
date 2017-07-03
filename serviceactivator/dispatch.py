@@ -38,6 +38,7 @@ from typing import Callable, Dict
 from core.connection import Connection
 from core.channels import Channel
 from core.command_processor import CommandProcessor, Request
+from core.exceptions import ConfigurationException
 from core.message_factory import create_quit_message
 from core.messaging import BrightsideConsumerConfiguration, BrightsideConsumer, BrightsideMessage
 from serviceactivator.message_pump import MessagePump
@@ -167,7 +168,7 @@ class ConsumerConfiguration:
         return self._connection
 
     @property
-    def consumer(self) -> BrightsideConsumerConfiguration:
+    def brightside_configuration(self) -> BrightsideConsumerConfiguration:
         return self._consumer
 
     @property
@@ -211,14 +212,16 @@ class Dispatcher:
     def __init__(self, consumers: Dict[str, ConsumerConfiguration]) -> None:
         self._state = DispatcherState.ds_notready
 
-        self._consumers = {k: Performer(
+        self._consumers = consumers
+
+        self._performers = {k: Performer(
                             k,
                             v.connection,
-                            v.consumer,
+                            v.brightside_configuration,
                             v.consumer_factory,
                             v.command_processor_factory,
                             v.mapper_func)
-                           for k, v in consumers.items()}
+                            for k, v in self._consumers.items()}
 
         self._running_performers = {}
         self._supervisor = None
@@ -232,7 +235,7 @@ class Dispatcher:
     def receive(self):
 
         def _receive(dispatcher: Dispatcher, initialized: Event) -> None:
-            for k, v in self._consumers.items():
+            for k, v in self._performers.items():
                 event = Event()
                 dispatcher._running_performers[k] = v.run(event)
                 event.wait(3) # TODO: Do we want to configure this polling interval?
@@ -245,22 +248,45 @@ class Dispatcher:
         if self._state == DispatcherState.ds_awaiting:
             initialized = Event()
             self._supervisor = Thread(target=_receive, args=(self, initialized))
-            initialized.wait(5)  # TODO: Should this be number of performs and configured wiath related?
+            initialized.wait(5)  # TODO: Should this be number of performs and configured with related?
             self._state = DispatcherState.ds_running
             self._supervisor.start()
 
     def end(self):
         if self._state == DispatcherState.ds_running:
             for channel, process in self._running_performers.items():
-                self._consumers[channel].stop()
+                self._performers[channel].stop()
                 process.join(10)  # TODO: We really want to make this configurable
 
             self._state == DispatcherState.ds_stopping
             self._supervisor.join(5)
+            self._running_performers.clear()
+            self._supervisor = None
 
         self._state = DispatcherState.ds_stopped
 
         # Do we want to determine if any processes have failed to complete Within the time frame
+
+    def open(self, consumer_name: str) -> None:
+        # TODO: Build then refactor with receive
+        # Find the consumer
+        if consumer_name not in self._consumers:
+            raise ConfigurationException("The consumer {} could not be found, did you register it?".format(consumer_name))
+
+        self._performers
+        consumer = self._consumers[consumer_name]
+        performer = Performer(consumer_name,
+                              consumer.connection,
+                              consumer.brightside_configuration,
+                              consumer.consumer_factory,
+                              consumer.command_processor_factory,
+                              consumer.mapper_func)
+        # if we have a supervisor thread
+        # start and add to items monitored by supervisor (running performers)
+        # else
+        # start the supervisor with the single consumer
+
+        pass
 
 
 
