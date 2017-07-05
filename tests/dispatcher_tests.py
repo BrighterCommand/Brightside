@@ -74,7 +74,6 @@ class PerformerFixture(unittest.TestCase):
 
         p.join()
 
-        # We don't have much we can confirm other than: we reached here without error. The state is in a seperate process
         self.assertTrue(True)
 
 
@@ -107,6 +106,7 @@ class DispatcherFixture(unittest.TestCase):
         dispatcher.end()
 
         self.assertEqual(dispatcher.state, DispatcherState.ds_stopped)
+        self.assertTrue(pipeline.empty())
 
     def test_restart_consumer(self):
         """Given that I have a dispatcher with all consumers stopped
@@ -154,6 +154,7 @@ class DispatcherFixture(unittest.TestCase):
         dispatcher.end()
 
         self.assertEqual(dispatcher.state, DispatcherState.ds_stopped)
+        self.assertTrue(pipeline_one.empty())
 
         #Now add a new message, restart a consumer, and eat
         event_three = MyEvent()
@@ -171,6 +172,7 @@ class DispatcherFixture(unittest.TestCase):
         dispatcher.end()
 
         self.assertEqual(dispatcher.state, DispatcherState.ds_stopped)
+        self.assertTrue(pipeline_two.empty())
 
 
 

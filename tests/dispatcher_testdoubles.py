@@ -37,13 +37,14 @@ from core.connection import Connection
 from core.messaging import BrightsideConsumer, BrightsideConsumerConfiguration
 from core.message_factory import create_null_message
 
+
 def mock_command_processor_factory(channel_name:str):
     """
     callback function to create a command processor
     channel_name is intended to help and implementor set up the command processor, but its not needed here
     """
-    command_processor = Mock(spec=CommandProcessor)
-    return command_processor
+    mock_command_processor = Mock(spec=CommandProcessor)
+    return mock_command_processor
 
 
 def mock_consumer_factory(connection: Connection, consumer_configuration: BrightsideConsumerConfiguration,

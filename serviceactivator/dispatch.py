@@ -38,7 +38,7 @@ from typing import Callable, Dict
 from core.connection import Connection
 from core.channels import Channel
 from core.command_processor import CommandProcessor, Request
-from core.exceptions import ConfigurationException
+from core.exceptions import ConfigurationException, MessagingException
 from core.message_factory import create_quit_message
 from core.messaging import BrightsideConsumerConfiguration, BrightsideConsumer, BrightsideMessage
 from serviceactivator.message_pump import MessagePump
@@ -273,7 +273,6 @@ class Dispatcher:
         if consumer_name not in self._consumers:
             raise ConfigurationException("The consumer {} could not be found, did you register it?".format(consumer_name))
 
-        self._performers
         consumer = self._consumers[consumer_name]
         performer = Performer(consumer_name,
                               consumer.connection,
@@ -281,12 +280,20 @@ class Dispatcher:
                               consumer.consumer_factory,
                               consumer.command_processor_factory,
                               consumer.mapper_func)
-        # if we have a supervisor thread
-        # start and add to items monitored by supervisor (running performers)
-        # else
-        # start the supervisor with the single consumer
+        self._performers[consumer_name] = performer
 
-        pass
+        # if we have a supervisor thread
+        if self._state == DispatcherState.ds_running:
+        # start and add to items monitored by supervisor (running performers)
+            pass
+        # else
+        elif self._state == DispatcherState.ds_stopped:
+        # start the supervisor with the single consumer
+            self._state = DispatcherState.ds_awaiting
+            self.receive()
+        else:
+            raise MessagingException("Dispatcher in a un-recognised state to open new connection; state was {}", self._state)
+
 
 
 
