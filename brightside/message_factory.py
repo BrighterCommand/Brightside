@@ -30,7 +30,7 @@ THE SOFTWARE.
 """
 
 from uuid import uuid4
-from core.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideMessageHeader, BrightsideMessageType
+from brightside.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideMessageHeader, BrightsideMessageType
 
 
 def create_null_message():

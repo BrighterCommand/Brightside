@@ -30,10 +30,10 @@ THE SOFTWARE.
 """
 from typing import Optional
 
-from core.exceptions import ConfigurationException
-from core.registry import Registry, MessageMapperRegistry
-from core.messaging import BrightsideMessageStore, BrightsideProducer
-from core.handler import Request
+from brightside.exceptions import ConfigurationException
+from brightside.registry import Registry, MessageMapperRegistry
+from brightside.messaging import BrightsideMessageStore, BrightsideProducer
+from brightside.handler import Request
 
 
 class CommandProcessor:

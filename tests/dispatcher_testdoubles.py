@@ -32,10 +32,10 @@ from unittest.mock import Mock
 import logging
 
 from arame.gateway import ArameConsumer
-from core.command_processor import CommandProcessor
-from core.connection import Connection
-from core.messaging import BrightsideConsumer, BrightsideConsumerConfiguration
-from core.message_factory import create_null_message
+from brightside.command_processor import CommandProcessor
+from brightside.connection import Connection
+from brightside.messaging import BrightsideConsumer, BrightsideConsumerConfiguration
+from brightside.message_factory import create_null_message
 
 
 def mock_command_processor_factory(channel_name:str):

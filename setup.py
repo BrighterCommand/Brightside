@@ -3,7 +3,7 @@ import ez_setup
 ez_setup.use_setuptools()
 
 setup(
-    name='brightside',
+    name='examples',
     description='Provides a command dispatcher and work queue implementation ',
     long_description="""See the Github project page (https://github.com/iancooper/Paramore) for more on Brightside""",
     license='MIT',
@@ -21,7 +21,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'run_brightside = core.__main__:run'
+            'run_brightside = brightside.__main__:run'
         ]
     },
     classifiers=[

@@ -30,13 +30,15 @@ THE SOFTWARE.
 **********************************************************************i*s
 """
 
+from multiprocessing import Queue
 import unittest
 from uuid import uuid4
 
 from tests.messaging_testdoubles import TestMessage
-from arame.gateway import ArameConsumer, ArameConnection, ArameProducer
+from arame.gateway import ArameConsumer, ArameProducer
 from arame.messaging import JsonRequestSerializer
-from core.messaging import BrightsideMessage, BrightsideConsumerConfiguration, BrightsideMessageBody, BrightsideMessageBodyType, BrightsideMessageHeader, BrightsideMessageType
+from brightside.connection import Connection
+from brightside.messaging import BrightsideMessage, BrightsideConsumerConfiguration, BrightsideMessageBody, BrightsideMessageBodyType, BrightsideMessageHeader, BrightsideMessageType
 
 
 class ArameGatewayTests(unittest.TestCase):
@@ -44,9 +46,11 @@ class ArameGatewayTests(unittest.TestCase):
     test_topic = "kombu_gateway_tests"
 
     def setUp(self):
-        self._connection = ArameConnection("amqp://guest:guest@localhost:5672//", "paramore.brighter.exchange", is_durable=True)
+        self._connection = Connection("amqp://guest:guest@localhost:5672//", "paramore.brightside.exchange", is_durable=True)
         self._producer = ArameProducer(self._connection)
-        self._consumer = ArameConsumer(self._connection, BrightsideConsumerConfiguration("brightside_tests", self.test_topic))
+        self._pipeline = Queue()
+        self._consumer = ArameConsumer(self._connection, BrightsideConsumerConfiguration(self._pipeline,
+                                        "brightside_tests", self.test_topic))
 
     def test_posting_a_message(self):
         """Given that I have an RMQ message producer

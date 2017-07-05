@@ -31,9 +31,9 @@ THE SOFTWARE.
 
 from queue import Queue
 
-from core.channels import ChannelFailureException, ChannelName, ChannelState
-from core.messaging import BrightsideMessage
-from core.message_factory import create_null_message, create_quit_message
+from brightside.channels import ChannelFailureException, ChannelName, ChannelState
+from brightside.messaging import BrightsideMessage
+from brightside.message_factory import create_null_message, create_quit_message
 
 
 class FakeChannel:

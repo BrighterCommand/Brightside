@@ -33,9 +33,9 @@ import logging
 
 from poll import retry, circuitbreaker
 
-from core.handler import Handler, Command, Event, Request
-from core.messaging import BrightsideMessageBody, BrightsideMessageHeader, BrightsideMessage, BrightsideMessageType
-from core.log_handler import log_handler
+from brightside.handler import Handler, Command, Event, Request
+from brightside.messaging import BrightsideMessageBody, BrightsideMessageHeader, BrightsideMessage, BrightsideMessageType
+from brightside.log_handler import log_handler
 from arame.messaging import JsonRequestSerializer
 
 

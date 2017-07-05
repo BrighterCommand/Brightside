@@ -34,10 +34,10 @@ import time
 from typing import Callable
 from threading import current_thread, Event
 
-from core.command_processor import CommandProcessor, Request
-from core.channels import Channel
-from core.exceptions import ChannelFailureException, ConfigurationException, DeferMessageException
-from core.messaging import BrightsideMessage, BrightsideMessageHeader, BrightsideMessageType
+from brightside.command_processor import CommandProcessor, Request
+from brightside.channels import Channel
+from brightside.exceptions import ChannelFailureException, ConfigurationException, DeferMessageException
+from brightside.messaging import BrightsideMessage, BrightsideMessageHeader, BrightsideMessageType
 
 
 class MessagePump:
@@ -90,6 +90,7 @@ class MessagePump:
             elif message.header.message_type == BrightsideMessageType.quit:
                 self._logger.debug("MessagePump: Quite receiving messages from {} on thread # ".format(
                     self._channel.name, current_thread().name))
+                self._channel.end()
                 break
             elif message.header.message_type == BrightsideMessageType.unacceptable:
                 self._logger.debug("MessagePump: Failed to parse a message from the incoming message with id () from {} on thread # ".format(

@@ -39,9 +39,9 @@ from kombu.pools import connections
 from kombu import exceptions as kombu_exceptions
 from kombu.message import Message as KombuMessage
 
-from core.connection import Connection
-from core.exceptions import ChannelFailureException
-from core.messaging import BrightsideConsumer, BrightsideConsumerConfiguration, BrightsideMessage, BrightsideProducer, BrightsideMessageHeader, BrightsideMessageBody, BrightsideMessageType
+from brightside.connection import Connection
+from brightside.exceptions import ChannelFailureException
+from brightside.messaging import BrightsideConsumer, BrightsideConsumerConfiguration, BrightsideMessage, BrightsideProducer, BrightsideMessageHeader, BrightsideMessageBody, BrightsideMessageType
 from arame.messaging import ArameMessageFactory, KombuMessageFactory
 
 

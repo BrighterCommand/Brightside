@@ -34,7 +34,7 @@ import unittest
 import logging
 from mock import call, patch
 
-from core.command_processor import CommandProcessor, Registry
+from brightside.command_processor import CommandProcessor, Registry
 
 from tests.handlers_testdoubles import MyCommand, MyCommandHandler
 

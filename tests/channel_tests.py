@@ -29,12 +29,12 @@ THE SOFTWARE.
 ***********************************************************************
 """
 
-
+from multiprocessing import Queue as Pipeline
 import unittest
 from uuid import uuid4
 
-from core.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideMessageHeader, BrightsideMessageType
-from core.channels import Channel, ChannelState
+from brightside.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideMessageHeader, BrightsideMessageType
+from brightside.channels import Channel, ChannelState
 from tests.channels_testdoubles import FakeConsumer
 
 
@@ -51,17 +51,17 @@ class ChannelFixture(unittest.TestCase):
         header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.command)
         message = BrightsideMessage(header, body)
 
-        consumer = FakeConsumer()
-        consumer.queue.put(message)
+        fake_queue = [message]
+        consumer = FakeConsumer(fake_queue)
 
-        channel = Channel("test", consumer)
+        channel = Channel("test", consumer, Pipeline())
 
         msg = channel.receive(1)
 
         self.assertEqual(message.body.value, msg.body.value)
         self.assertEqual(message.header.topic, msg.header.topic)
         self.assertEqual(message.header.message_type, msg.header.message_type)
-        self.assertTrue(consumer.queue.empty())  # Consumer is empty as we have read the queue
+        self.assertEqual(0, len(fake_queue))  # We have read the queue
         self.assertTrue(channel.state == ChannelState.started)  # We don't stop because we consume a message
 
     def test_handle_stop(self):
@@ -75,17 +75,17 @@ class ChannelFixture(unittest.TestCase):
         header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.command)
         message = BrightsideMessage(header, body)
 
-        consumer = FakeConsumer()
-        consumer.queue.put(message)
+        fake_queue = [message]
+        consumer = FakeConsumer(fake_queue)
 
-        channel = Channel("test", consumer)
+        channel = Channel("test", consumer, Pipeline())
 
         channel.stop()
 
-        channel.receive(1)
+        channel.receive(3)
 
         self.assertEqual(str(channel.name), "test")
-        self.assertFalse(consumer.queue.empty())  # Consumer is not empty as we have not read the queue
+        self.assertEqual(1, len(fake_queue))  # We have not read the queue
         self.assertTrue(channel.state == ChannelState.stopping)
 
     def test_handle_acknowledge(self):
@@ -99,10 +99,10 @@ class ChannelFixture(unittest.TestCase):
         header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.command)
         message = BrightsideMessage(header, body)
 
-        consumer = FakeConsumer()
-        consumer.queue.put(message)
+        fake_queue = [message]
+        consumer = FakeConsumer(fake_queue)
 
-        channel = Channel("test", consumer)
+        channel = Channel("test", consumer, Pipeline())
 
         channel.acknowledge(message)
 
@@ -119,9 +119,10 @@ class ChannelFixture(unittest.TestCase):
         header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.command)
         message = BrightsideMessage(header, body)
 
-        consumer = FakeConsumer()
+        fake_queue = []
+        consumer = FakeConsumer(fake_queue)
 
-        channel = Channel("test", consumer)
+        channel = Channel("test", consumer, Pipeline())
 
         channel.requeue(message)
 

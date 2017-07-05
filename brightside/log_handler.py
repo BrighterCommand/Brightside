@@ -31,8 +31,8 @@ THE SOFTWARE.
 from functools import wraps
 import logging
 
-from core.exceptions import ConfigurationException
-from core.handler import Request
+from brightside.exceptions import ConfigurationException
+from brightside.handler import Request
 
 ENTRY_MESSAGE = "Entering {}"
 EXIT_MESSAGE = "Exiting {}"

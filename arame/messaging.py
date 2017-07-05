@@ -36,9 +36,9 @@ from uuid import UUID, uuid4
 
 from kombu.message import Message as Message
 
-from core.handler import Request
-from core.messaging import BrightsideMessage, BrightsideMessageHeader, BrightsideMessageBody, BrightsideMessageType
-from core.exceptions import MessagingException
+from brightside.handler import Request
+from brightside.messaging import BrightsideMessage, BrightsideMessageHeader, BrightsideMessageBody, BrightsideMessageType
+from brightside.exceptions import MessagingException
 
 message_type_header = "MessageType"
 message_id_header = "MessageId"

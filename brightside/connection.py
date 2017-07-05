@@ -1,4 +1,3 @@
-# Create Connection, not Arame Connection
 class Connection:
     """Contains the details required to connect to a RMQ broker: the amqp uri and the exchange"""
     def __init__(self, amqp_uri: str, exchange: str, exchange_type: str = "direct", is_durable: bool = False) -> None:

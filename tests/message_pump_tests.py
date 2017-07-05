@@ -29,20 +29,19 @@ THE SOFTWARE.
 ***********************************************************************
 """
 
-from threading import Event, Thread
+import time
 import unittest
+from threading import Event, Thread
 from unittest.mock import Mock
 from uuid import uuid4
-import time
 
 from arame.messaging import JsonRequestSerializer
-from core.command_processor import CommandProcessor
-from core.exceptions import ConfigurationException, DeferMessageException
-from core.channels import Channel
-from core.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideMessageBodyType, BrightsideMessageHeader, BrightsideMessageType
-from core.message_factory import create_quit_message
-from serviceactivator.message_pump import MessagePump
-
+from brightside.channels import Channel
+from brightside.command_processor import CommandProcessor
+from brightside.exceptions import ConfigurationException, DeferMessageException
+from brightside.message_factory import create_quit_message
+from brightside.message_pump import MessagePump
+from brightside.messaging import BrightsideMessage, BrightsideMessageBody, BrightsideMessageBodyType, BrightsideMessageHeader, BrightsideMessageType
 from tests.handlers_testdoubles import MyCommandHandler, MyCommand, map_my_command_to_request
 from tests.message_pump_doubles import FakeChannel
 

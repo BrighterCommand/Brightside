@@ -34,8 +34,8 @@ import unittest
 from poll import CircuitBrokenError
 
 from tests.handlers_testdoubles import MyHandlerSupportingRetry, MyHandlerBreakingAfterRetry, MyHandlerBreakingCircuitAfterThreeFailures, MyCommand
-from core.command_processor import CommandProcessor
-from core.registry import Registry
+from brightside.command_processor import CommandProcessor
+from brightside.registry import Registry
 
 class PipelineTests(unittest.TestCase):
 

@@ -28,16 +28,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ***********************************************************************
 """
-from multiprocessing import Event, Queue
-import unittest
-from uuid import uuid4
 import time
+import unittest
+from multiprocessing import Event, Queue
+from uuid import uuid4
 
 from arame.messaging import JsonRequestSerializer
-from core.connection import Connection
-from core.messaging import BrightsideConsumerConfiguration, BrightsideMessageHeader, BrightsideMessageBody, \
+from brightside.connection import Connection
+from brightside.dispatch import ConsumerConfiguration, Dispatcher, DispatcherState, Performer
+from brightside.messaging import BrightsideConsumerConfiguration, BrightsideMessageHeader, BrightsideMessageBody, \
     BrightsideMessage, BrightsideMessageType, BrightsideMessageBodyType
-from serviceactivator.dispatch import ConsumerConfiguration, Dispatcher, DispatcherState, Performer
 from tests.dispatcher_testdoubles import mock_command_processor_factory, mock_consumer_factory
 from tests.handlers_testdoubles import MyCommand, MyEvent, map_my_command_to_request, map_my_event_to_request
 
@@ -52,8 +52,8 @@ class PerformerFixture(unittest.TestCase):
         """
         request = MyCommand()
         pipeline = Queue()
-        connection = Connection("amqp://guest:guest@localhost:5762/%2f", "brightside.perfomer.exchange")
-        configuration = BrightsideConsumerConfiguration(pipeline, "performer.test.queue", "brightside.tests.mycommand")
+        connection = Connection("amqp://guest:guest@localhost:5762/%2f", "examples.perfomer.exchange")
+        configuration = BrightsideConsumerConfiguration(pipeline, "performer.test.queue", "examples.tests.mycommand")
         performer = Performer("test_channel", connection, configuration, mock_consumer_factory, mock_command_processor_factory, map_my_command_to_request)
 
         header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
@@ -85,8 +85,8 @@ class DispatcherFixture(unittest.TestCase):
         """
         request = MyCommand()
         pipeline = Queue()
-        connection = Connection("amqp://guest:guest@localhost:5762/%2f", "brightside.perfomer.exchange")
-        configuration = BrightsideConsumerConfiguration(pipeline, "dispatcher.test.queue", "brightside.tests.mycommand")
+        connection = Connection("amqp://guest:guest@localhost:5762/%2f", "examples.perfomer.exchange")
+        configuration = BrightsideConsumerConfiguration(pipeline, "dispatcher.test.queue", "examples.tests.mycommand")
         consumer = ConsumerConfiguration(connection, configuration, mock_consumer_factory, mock_command_processor_factory, map_my_command_to_request)
         dispatcher = Dispatcher({"MyCommand": consumer})
 
@@ -113,12 +113,12 @@ class DispatcherFixture(unittest.TestCase):
             When I restart a consumer
             Then the dispatcher should have one running consumer
         """
-        connection = Connection("amqp://guest:guest@localhost:5762/%2f", "brightside.perfomer.exchange")
+        connection = Connection("amqp://guest:guest@localhost:5762/%2f", "examples.perfomer.exchange")
 
         # First consumer
         request = MyCommand()
         pipeline_one = Queue()
-        configuration_one = BrightsideConsumerConfiguration(pipeline_one, "restart_command.test.queue", "brightside.tests.mycommand")
+        configuration_one = BrightsideConsumerConfiguration(pipeline_one, "restart_command.test.queue", "examples.tests.mycommand")
         consumer_one = ConsumerConfiguration(connection, configuration_one, mock_consumer_factory, mock_command_processor_factory, map_my_command_to_request)
 
         header_one = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
@@ -131,7 +131,7 @@ class DispatcherFixture(unittest.TestCase):
         # Second consumer
         event = MyEvent()
         pipeline_two = Queue()
-        configuration_two = BrightsideConsumerConfiguration(pipeline_two, "restart_event.test.queue", "brightside.tests.myevent")
+        configuration_two = BrightsideConsumerConfiguration(pipeline_two, "restart_event.test.queue", "examples.tests.myevent")
         consumer_two = ConsumerConfiguration(connection, configuration_two, mock_consumer_factory, mock_command_processor_factory, map_my_event_to_request)
 
         header_two = BrightsideMessageHeader(uuid4(), event.__class__.__name__, BrightsideMessageType.event)

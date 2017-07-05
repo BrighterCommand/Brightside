@@ -29,9 +29,9 @@ THE SOFTWARE.
 ***********************************************************************
 """
 
-from queue import Queue
+from typing import List
 
-from core.messaging import BrightsideConsumer, BrightsideMessage
+from brightside.messaging import BrightsideConsumer, BrightsideMessage
 
 
 class FakeConsumer(BrightsideConsumer):
@@ -40,12 +40,12 @@ class FakeConsumer(BrightsideConsumer):
         then off the stack. Purge, will clean the queue
     """
 
-    def __init__(self):
-        self._queue = Queue()
+    def __init__(self, queue: List):
         self._acknowledged_message = None
+        self._queue = queue
 
     def __len__(self):
-        return self._queue.qsize()
+        return len(self._queue)
 
     def acknowledge(self, message):
         self._acknowledged_message = message
@@ -56,19 +56,12 @@ class FakeConsumer(BrightsideConsumer):
     def has_acknowledged(self, message):
         return (self._acknowledged_message is not None) and (self._acknowledged_message.id == message.id)
 
-    @property
-    def queue(self):
-        return self._queue
-
     def purge(self):
-        while not self._queue.empty():
-            self._queue.get(block=False)
-
-        assert self._queue.empty()
+        self._queue.clear()
 
     def receive(self, timeout: int):
-        return self._queue.get(block=True,timeout=timeout)
+        return self._queue.pop()
 
     def requeue(self, message):
-        self._queue.put(message)
+        self._queue.append(message)
 

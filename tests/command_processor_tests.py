@@ -31,8 +31,8 @@ THE SOFTWARE.
 import unittest
 
 from tests.handlers_testdoubles import MyCommandHandler, MyCommand, MyEventHandler, MyEvent
-from core.command_processor import CommandProcessor
-from core.registry import Registry
+from brightside.command_processor import CommandProcessor
+from brightside.registry import Registry
 
 
 class CommandProcessorFixture(unittest.TestCase):

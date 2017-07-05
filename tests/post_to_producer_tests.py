@@ -32,11 +32,11 @@ THE SOFTWARE.
 
 import unittest
 
-from core.registry import MessageMapperRegistry
+from brightside.registry import MessageMapperRegistry
 from tests.messaging_testdoubles import FakeMessageStore, FakeProducer
-from core.command_processor import CommandProcessor
+from brightside.command_processor import CommandProcessor
 from tests.handlers_testdoubles import MyCommand, MyOtherCommand, map_mycommand_to_message
-from core.exceptions import ConfigurationException
+from brightside.exceptions import ConfigurationException
 
 
 class PostTests(unittest.TestCase):

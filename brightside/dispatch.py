@@ -28,20 +28,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ***********************************************************************
 """
+import logging
+import time
 from enum import Enum
 from multiprocessing import Event, Process
-import logging
 from threading import Thread
-import time
 from typing import Callable, Dict
 
-from core.connection import Connection
-from core.channels import Channel
-from core.command_processor import CommandProcessor, Request
-from core.exceptions import ConfigurationException, MessagingException
-from core.message_factory import create_quit_message
-from core.messaging import BrightsideConsumerConfiguration, BrightsideConsumer, BrightsideMessage
-from serviceactivator.message_pump import MessagePump
+from brightside.channels import Channel
+from brightside.command_processor import CommandProcessor, Request
+from brightside.connection import Connection
+from brightside.exceptions import ConfigurationException, MessagingException
+from brightside.message_factory import create_quit_message
+from brightside.message_pump import MessagePump
+from brightside.messaging import BrightsideConsumerConfiguration, BrightsideConsumer, BrightsideMessage
 
 
 class Performer:

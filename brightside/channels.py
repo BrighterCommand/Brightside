@@ -31,9 +31,9 @@ THE SOFTWARE.
 from enum import Enum
 from multiprocessing import Queue
 
-from core.exceptions import ChannelFailureException
-from core.messaging import BrightsideConsumer, BrightsideMessage
-from core.message_factory import create_quit_message
+from brightside.exceptions import ChannelFailureException
+from brightside.messaging import BrightsideConsumer, BrightsideMessage
+from brightside.message_factory import create_quit_message
 
 
 class ChannelState(Enum):

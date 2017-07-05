@@ -30,9 +30,9 @@ THE SOFTWARE.
 """
 from typing import Callable, Dict, List, TypeVar
 
-from core.handler import Handler, Request
-from core.messaging import BrightsideMessage
-from core.exceptions import ConfigurationException
+from brightside.handler import Handler, Request
+from brightside.messaging import BrightsideMessage
+from brightside.exceptions import ConfigurationException
 
 
 class Registry:

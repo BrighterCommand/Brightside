@@ -32,8 +32,8 @@ THE SOFTWARE.
 
 import uuid
 
-from core.handler import Command
-from core.messaging import BrightsideMessage, BrightsideMessageStore, BrightsideProducer
+from brightside.handler import Command
+from brightside.messaging import BrightsideMessage, BrightsideMessageStore, BrightsideProducer
 
 
 class FakeMessageStore(BrightsideMessageStore):
