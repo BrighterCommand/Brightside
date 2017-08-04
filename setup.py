@@ -1,33 +1,24 @@
 from setuptools import setup, find_packages
-import ez_setup
-ez_setup.use_setuptools()
 
 setup(
-    name='examples',
-    description='Provides a command dispatcher and work queue implementation ',
-    long_description="""See the Github project page (https://github.com/iancooper/Paramore) for more on Brightside""",
+    name='brightside',
+    description='Provides a command dispatcher and task queue to support CQRS and microservices ',
+    long_description="""See the Github project page (https://github.com/BrigherCommand/Brightside) for more on Brightside""",
     license='MIT',
-    keywords="Brighter Messaging Command Dispatch Retry Circuit Breaker",
+    keywords=['brightside', 'messaging', 'command', 'dispatcher', 'invoker',  'CQRS', 'microservices'],
     version='0.1',
     author='Ian Cooper',
     author_email='ian_hammond_cooper@yahoo.co.uk',
-    url='https://github.com/iancooper/Paramore',
-
-    packages=find_packages(),
+    url='https://github.com/BrigherCommand/Brightside',
+    packages=find_packages(exclude=["tests", "examples"]),
     install_requires=['ez_setup', 'kombu', 'poll', 'mock'],
     package_data={
         # If any package contains *.txt or *.rst files, include them:
         '': ['*.txt', '*.rst'],
     },
-    entry_points={
-        'console_scripts': [
-            'run_brightside = brightside.__main__:run'
-        ]
-    },
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.4",
         "License :: OSI Approved :: MIT License",
         "Intended Audience :: Developers",
         "Intended Audience :: Information Technology",
