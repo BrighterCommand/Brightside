@@ -54,7 +54,7 @@ def run():
 
     message_store = FakeMessageStore()
     message_mapper_registry = MessageMapperRegistry()
-    self._messageMapperRegistry.register(HelloWorldCommand, map_mycommand_to_message)
+    message_mapper_registry.register(HelloWorldCommand, map_mycommand_to_message)
     connection = Connection("amqp://guest:guest@localhost:5672//", "paramore.brightside.exchange", is_durable=True)
     producer = ArameProducer(connection)
 
