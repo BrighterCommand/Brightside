@@ -83,7 +83,7 @@ class MessagePump:
                     self._channel.name, current_thread().name))
 
             if message is None:
-                raise ChannelFailureException("Could not receive message. Note that should return BrightsideMessageType.none from an emoty queeu")
+                raise ChannelFailureException("Could not receive message. Note that should return BrightsideMessageType.none from an empty queeu")
             elif message.header.message_type == BrightsideMessageType.none:
                 time.sleep(self._timeout)
                 continue

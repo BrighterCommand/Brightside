@@ -1,5 +1,5 @@
 """
-File             : helloworld.py
+File             : sender.py
 Author           : ian
 Created          : 08-04-2017
 
@@ -41,9 +41,9 @@ from brightside.registry import MessageMapperRegistry
 from src.core import FakeMessageStore, HelloWorldCommand
 
 
-def map_mycommand_to_message(request: Request) -> BrightsideMessage:
+def map_hellworldcommand_to_message(request: Request) -> BrightsideMessage:
     message_body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json())
-    message = BrightsideMessage(BrightsideMessageHeader(request.id, "hellow_world", BrightsideMessageType.command), message_body)
+    message = BrightsideMessage(BrightsideMessageHeader(request.id, "hello_world", BrightsideMessageType.command), message_body)
     return message
 
 
@@ -54,7 +54,7 @@ def run():
 
     message_store = FakeMessageStore()
     message_mapper_registry = MessageMapperRegistry()
-    message_mapper_registry.register(HelloWorldCommand, map_mycommand_to_message)
+    message_mapper_registry.register(HelloWorldCommand, map_hellworldcommand_to_message)
     connection = Connection("amqp://guest:guest@localhost:5672//", "paramore.brightside.exchange", is_durable=True)
     producer = ArameProducer(connection)
 
