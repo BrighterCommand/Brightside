@@ -28,7 +28,7 @@ class HelloWorldCommandHandler(Handler):
 
 
 class HelloWorldCommand(Command):
-    def __init__(self, addressee):
+    def __init__(self, addressee=None):
         super().__init__()
         self._addressee = addressee
 

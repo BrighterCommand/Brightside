@@ -30,18 +30,21 @@ THE SOFTWARE.
 """
 
 import argparse
+import logging
+import sys
 
 from arame.gateway import ArameProducer
 from arame.messaging import JsonRequestSerializer
-from brightside.handler import Request
 from brightside.connection import Connection
 from brightside.command_processor import CommandProcessor
 from brightside.messaging import BrightsideMessageBody, BrightsideMessageHeader, BrightsideMessage, BrightsideMessageType
 from brightside.registry import MessageMapperRegistry
 from src.core import FakeMessageStore, HelloWorldCommand
 
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-def map_hellworldcommand_to_message(request: Request) -> BrightsideMessage:
+
+def map_hellworldcommand_to_message(request: HelloWorldCommand) -> BrightsideMessage:
     message_body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json())
     message = BrightsideMessage(BrightsideMessageHeader(request.id, "hello_world", BrightsideMessageType.command), message_body)
     return message

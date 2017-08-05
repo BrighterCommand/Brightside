@@ -75,12 +75,12 @@ class MessagePump:
 
                 message = self._channel.receive(self._timeout)
             except ChannelFailureException:
-                self._logger.warn("MessagePump: ChannelFailureException receiving messages from {} on thread # {}".format(
-                    self._channel.name, current_thread().name))
+                self._logger.warning("MessagePump: ChannelFailureException receiving messages from {} on thread # {}".format(
+                    self._channel.name, current_thread().name), exc_info=1)
                 continue
             except Exception:
-                self._logger.warn("MessagePump: Exception receiving messages from {} on thread # {}".format(
-                    self._channel.name, current_thread().name))
+                self._logger.warning("MessagePump: Exception receiving messages from {} on thread # {}".format(
+                    self._channel.name, current_thread().name), exc_info=1)
 
             if message is None:
                 raise ChannelFailureException("Could not receive message. Note that should return BrightsideMessageType.none from an empty queeu")
@@ -88,7 +88,7 @@ class MessagePump:
                 time.sleep(self._timeout)
                 continue
             elif message.header.message_type == BrightsideMessageType.quit:
-                self._logger.debug("MessagePump: Quite receiving messages from {} on thread # ".format(
+                self._logger.debug("MessagePump: Quit receiving messages from {} on thread # ".format(
                     self._channel.name, current_thread().name))
                 self._channel.end()
                 break

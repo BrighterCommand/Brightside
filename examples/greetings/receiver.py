@@ -7,7 +7,7 @@ Last Modified By : ian
 Last Modified On : 08-05-2017
 ***********************************************************************
 The MIT License (MIT)
-Copyright © 2017 Ian Cooper <ian_hammond_cooper@yahoo.co.uk>
+Copyright  2017 Ian Cooper <ian_hammond_cooper@yahoo.co.uk>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the “Software”), to deal
@@ -30,6 +30,7 @@ THE SOFTWARE.
 """
 
 import logging
+import sys
 import time
 
 from multiprocessing import Queue
@@ -42,6 +43,10 @@ from brightside.messaging import BrightsideConsumerConfiguration, BrightsideMess
 from brightside.registry import Registry
 from arame.messaging import JsonRequestSerializer
 from src.core import HelloWorldCommand, HelloWorldCommandHandler
+
+KEYBOARD_INTERRUPT_SLEEP = 3    # How long before checking for a keyhoard interrupt
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
 def command_processor_factory(channel_name:str):
@@ -61,22 +66,26 @@ def consumer_factory(connection: Connection, consumer_configuration: BrightsideC
 
 
 def map_my_command_to_request(message: BrightsideMessage) -> Request:
-    return JsonRequestSerializer(request=HelloWorldCommand(), serialized_request=message.body.value)\
-        .deserialize_from_json()
+    return JsonRequestSerializer(request=HelloWorldCommand(), serialized_request=message.body.value).deserialize_from_json()
 
 
 def run():
     pipeline = Queue()
-    connection = Connection("amqp://guest:guest@localhost:5762/%2f", "examples.perfomer.exchange")
-    configuration = BrightsideConsumerConfiguration(pipeline, "examples.greetings.queue", "hello_world")
+    connection = Connection("amqp://guest:guest@localhost:5672//", "paramore.brightside.exchange", is_durable=True)
+    configuration = BrightsideConsumerConfiguration(pipeline, "examples_greetings_queue", "hello_world")
     consumer = ConsumerConfiguration(connection, configuration, consumer_factory, command_processor_factory, map_my_command_to_request)
-    dispatcher = Dispatcher({"MyCommand": consumer})
+    dispatcher = Dispatcher({"HelloWorldCommand": consumer})
 
     dispatcher.receive()
 
-    time.sleep(10)
-
-    dispatcher.end()
+    # poll for keyboard input to allow the user to quit monitoring
+    while True:
+        try:
+            # just sleep unless we receive an interrupt i.e. CTRL+C
+            time.sleep(KEYBOARD_INTERRUPT_SLEEP)
+        except KeyboardInterrupt:
+            dispatcher.end()
+            sys.exit(1)
 
 
 if __name__ == "__main__":
