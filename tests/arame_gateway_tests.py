@@ -57,7 +57,7 @@ class ArameGatewayTests(unittest.TestCase):
             when I send that message via the producer
             then I should be able to read that message via the consumer
         """
-        header = BrightsideMessageHeader(uuid4(), self.test_topic, BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), self.test_topic, BrightsideMessageType.MT_COMMAND)
         body = BrightsideMessageBody("test content")
         message = BrightsideMessage(header, body)
 
@@ -72,13 +72,13 @@ class ArameGatewayTests(unittest.TestCase):
         self.assertEqual(message.body.value, read_message.body.value)
         self.assertTrue(self._consumer.has_acknowledged(read_message))
 
-    def test_requeuein_a_message(self):
+    def test_requeueing_a_message(self):
         """Given that I have an RMQ consumer
             when I requeue a message
             then it should return to the end of the queue
         """
         request = TestMessage()
-        header = BrightsideMessageHeader(uuid4(), self.test_topic, BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), self.test_topic, BrightsideMessageType.MT_COMMAND)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(), BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
 
@@ -104,7 +104,7 @@ class ArameGatewayTests(unittest.TestCase):
             then I should be able to re-hydrate it via the consumer
         """
         request = TestMessage()
-        header = BrightsideMessageHeader(uuid4(), self.test_topic, BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), self.test_topic, BrightsideMessageType.MT_COMMAND)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(), BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
 

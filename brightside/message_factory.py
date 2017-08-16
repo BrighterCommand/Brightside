@@ -34,10 +34,10 @@ from brightside.messaging import BrightsideMessage, BrightsideMessageBody, Brigh
 
 
 def create_null_message():
-    return BrightsideMessage(BrightsideMessageHeader(uuid4(), "", BrightsideMessageType.none), BrightsideMessageBody(""))
+    return BrightsideMessage(BrightsideMessageHeader(uuid4(), "", BrightsideMessageType.MT_NONE), BrightsideMessageBody(""))
 
 
 def create_quit_message():
     body = BrightsideMessageBody(body="")
-    header = BrightsideMessageHeader(uuid4(), topic="", message_type=BrightsideMessageType.quit)
+    header = BrightsideMessageHeader(uuid4(), topic="", message_type=BrightsideMessageType.MT_QUIT)
     return BrightsideMessage(header, body)

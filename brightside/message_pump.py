@@ -84,15 +84,15 @@ class MessagePump:
 
             if message is None:
                 raise ChannelFailureException("Could not receive message. Note that should return BrightsideMessageType.none from an empty queeu")
-            elif message.header.message_type == BrightsideMessageType.none:
+            elif message.header.message_type == BrightsideMessageType.MT_NONE:
                 time.sleep(self._timeout)
                 continue
-            elif message.header.message_type == BrightsideMessageType.quit:
+            elif message.header.message_type == BrightsideMessageType.MT_QUIT:
                 self._logger.debug("MessagePump: Quit receiving messages from {} on thread # ".format(
                     self._channel.name, current_thread().name))
                 self._channel.end()
                 break
-            elif message.header.message_type == BrightsideMessageType.unacceptable:
+            elif message.header.message_type == BrightsideMessageType.MT_UNACCEPTABLE:
                 self._logger.debug("MessagePump: Failed to parse a message from the incoming message with id () from {} on thread # ".format(
                     message.id, self._channel.name, current_thread().name))
                 self._acknowledge_message(message)
@@ -122,9 +122,9 @@ class MessagePump:
         return self._requeue_count is not None
 
     def _dispatch_message(self, message_header: BrightsideMessageHeader, request: Request) -> None:
-        if message_header.message_type == BrightsideMessageType.command:
+        if message_header.message_type == BrightsideMessageType.MT_COMMAND:
             self._command_processor.send(request)
-        elif message_header.message_type == BrightsideMessageType.event:
+        elif message_header.message_type == BrightsideMessageType.MT_EVENT:
             self._command_processor.publish(request)
 
     def _increment_unacceptable_message_count(self) -> int:

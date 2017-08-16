@@ -56,7 +56,7 @@ class PerformerFixture(unittest.TestCase):
         configuration = BrightsideConsumerConfiguration(pipeline, "performer.test.queue", "examples.tests.mycommand")
         performer = Performer("test_channel", connection, configuration, mock_consumer_factory, mock_command_processor_factory, map_my_command_to_request)
 
-        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.MT_COMMAND)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
                                      BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
@@ -90,7 +90,7 @@ class DispatcherFixture(unittest.TestCase):
         consumer = ConsumerConfiguration(connection, configuration, mock_consumer_factory, mock_command_processor_factory, map_my_command_to_request)
         dispatcher = Dispatcher({"MyCommand": consumer})
 
-        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.MT_COMMAND)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
                                      BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
@@ -121,7 +121,7 @@ class DispatcherFixture(unittest.TestCase):
         configuration_one = BrightsideConsumerConfiguration(pipeline_one, "restart_command.test.queue", "examples.tests.mycommand")
         consumer_one = ConsumerConfiguration(connection, configuration_one, mock_consumer_factory, mock_command_processor_factory, map_my_command_to_request)
 
-        header_one = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
+        header_one = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.MT_COMMAND)
         body_one = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
                                      BrightsideMessageBodyType.application_json)
         message_one = BrightsideMessage(header_one, body_one)
@@ -134,7 +134,7 @@ class DispatcherFixture(unittest.TestCase):
         configuration_two = BrightsideConsumerConfiguration(pipeline_two, "restart_event.test.queue", "examples.tests.myevent")
         consumer_two = ConsumerConfiguration(connection, configuration_two, mock_consumer_factory, mock_command_processor_factory, map_my_event_to_request)
 
-        header_two = BrightsideMessageHeader(uuid4(), event.__class__.__name__, BrightsideMessageType.event)
+        header_two = BrightsideMessageHeader(uuid4(), event.__class__.__name__, BrightsideMessageType.MT_EVENT)
         body_two = BrightsideMessageBody(JsonRequestSerializer(request=event).serialize_to_json(),
                                          BrightsideMessageBodyType.application_json)
         message_two = BrightsideMessage(header_two, body_two)
@@ -158,7 +158,7 @@ class DispatcherFixture(unittest.TestCase):
 
         #Now add a new message, restart a consumer, and eat
         event_three = MyEvent()
-        header_three = BrightsideMessageHeader(uuid4(), event.__class__.__name__, BrightsideMessageType.event)
+        header_three = BrightsideMessageHeader(uuid4(), event.__class__.__name__, BrightsideMessageType.MT_EVENT)
         body_three = BrightsideMessageBody(JsonRequestSerializer(request=event_three).serialize_to_json(),
                                          BrightsideMessageBodyType.application_json)
         message_three = BrightsideMessage(header_three, body_three)

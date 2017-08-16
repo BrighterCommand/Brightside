@@ -58,11 +58,25 @@ class BrightsideMessageBody:
 
 @unique
 class BrightsideMessageType(Enum):
-    unacceptable = 1
-    none = 2
-    command = 3
-    event = 4
-    quit = 5
+    """
+    MT_UNACCEPTABLE = The message could not be read
+    MT_NONE =  The message type has not been configured
+    MT_COMMAND = The message was sent as a command, and the producer intended it to be handled by a consumer
+    MT_EVENT = The message was raised as an event and the producer does not care if anyone listens to it
+        It only contains a simple notification, not the data of what changed
+    MT_DOCUMENT = The message was raised as an event and the producer does not care if anyone listens to it
+        It contains a notification of what changed
+    MT_QUIT = The message was raised as an event and the producer does not care if anyone listens to it
+        It contains a notification of what changed
+    MT_CALLBACK = Posted back onto the message pump
+    """
+    MT_UNACCEPTABLE = -1
+    MT_NONE = 0
+    MT_COMMAND = 1
+    MT_EVENT = 2
+    MT_DOCUMENT = 3
+    MT_QUIT = 5
+    MT_CALLBACK = 6
 
 
 class BrightsideMessageHeader:

@@ -109,10 +109,10 @@ class ArameMessageFactory:
         def _get_message_type() -> BrightsideMessageType:
             header, err = self._read_header(message_type_header, message)
             if err is None:
-                return BrightsideMessageType(header)
+                return BrightsideMessageType[header]
             else:
                 self._has_read_errors = True
-                return BrightsideMessageType.unacceptable
+                return BrightsideMessageType.MT_UNACCEPTABLE
 
         def _get_payload() -> str:
             body, err = self._read_payload(message)
@@ -140,7 +140,7 @@ class ArameMessageFactory:
 
         message_id = _get_message_id()
         topic = _get_topic()
-        message_type = _get_message_type() if not message.errors or self._has_read_errors else BrightsideMessageType.unacceptable
+        message_type = _get_message_type() if not message.errors or self._has_read_errors else BrightsideMessageType.MT_UNACCEPTABLE
         correlation_id = _get_correlation_id()
         payload = _get_payload()
         payload_type = _get_payload_type()
@@ -198,7 +198,7 @@ class KombuMessageFactory:
 
         header = {}
         _add_message_id(header, self._message.header.id)
-        _add_message_type(header, self._message.header.message_type.value)
+        _add_message_type(header, self._message.header.message_type.name)
         _add_correlation_id(header, self._message.header.correlation_id)
 
         return header

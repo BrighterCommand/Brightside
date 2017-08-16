@@ -182,7 +182,7 @@ class MyHandlerBreakingCircuitAfterThreeFailures(Handler):
 
 def map_mycommand_to_message(request: Request) -> BrightsideMessage:
     message_body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json())
-    message = BrightsideMessage(BrightsideMessageHeader(request.id, "my_command", BrightsideMessageType.command), message_body)
+    message = BrightsideMessage(BrightsideMessageHeader(request.id, "my_command", BrightsideMessageType.MT_COMMAND), message_body)
     return message
 
 
@@ -193,7 +193,7 @@ def map_my_command_to_request(message: BrightsideMessage) -> Request:
 
 def map_myevent_to_message(request: Request) -> BrightsideMessage:
     message_body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json())
-    message = BrightsideMessage(BrightsideMessageHeader(request.id, "my_event", BrightsideMessageType.event), message_body)
+    message = BrightsideMessage(BrightsideMessageHeader(request.id, "my_event", BrightsideMessageType.MT_EVENT), message_body)
     return message
 
 

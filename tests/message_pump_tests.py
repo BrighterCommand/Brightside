@@ -61,7 +61,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         message_pump = MessagePump(command_processor, channel, map_my_command_to_request)
 
-        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.MT_COMMAND)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
                                      BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
@@ -95,7 +95,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         message_pump = MessagePump(command_processor, channel, None)
 
-        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.MT_COMMAND)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
                                      BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
@@ -129,7 +129,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         message_pump = MessagePump(command_processor, channel, map_my_command_to_request)
 
-        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.unacceptable)
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.MT_UNACCEPTABLE)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
                                      BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
@@ -164,7 +164,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         message_pump = MessagePump(command_processor, channel, map_my_command_to_request, unacceptable_message_limit=unacceptable_message_limit)
 
-        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.unacceptable)
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.MT_UNACCEPTABLE)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
                                      BrightsideMessageBodyType.application_json)
         message_one = BrightsideMessage(header, body)
@@ -201,7 +201,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         message_pump = MessagePump(command_processor, channel, map_my_command_to_request)
 
-        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.MT_COMMAND)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
                                      BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
@@ -237,7 +237,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         message_pump = MessagePump(command_processor, channel, map_my_command_to_request, requeue_count=3)
 
-        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.MT_COMMAND)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
                                      BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)

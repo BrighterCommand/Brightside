@@ -143,7 +143,7 @@ class ArameConsumer(BrightsideConsumer):
         connection = BrokerConnection(hostname=self._amqp_uri)
         with connections[connection].acquire(block=True) as conn:
             self._logger.debug('Got connection: %s', conn.as_uri())
-            with Consumer([self._queue], callbacks=[_purge_messages]) as consumer:
+            with Consumer(conn, queues=[self._queue], callbacks=[_purge_messages]) as consumer:
                 ensure_kwargs = self.RETRY_OPTIONS.copy()
                 ensure_kwargs['errback'] = _purge_errors
                 safe_purge = conn.ensure(consumer, _purge_messages, **ensure_kwargs)
@@ -151,7 +151,7 @@ class ArameConsumer(BrightsideConsumer):
 
     def receive(self, timeout: int) -> BrightsideMessage:
 
-        self._message = BrightsideMessage(BrightsideMessageHeader(uuid4(), "", BrightsideMessageType.none), BrightsideMessageBody(""))
+        self._message = BrightsideMessage(BrightsideMessageHeader(uuid4(), "", BrightsideMessageType.MT_NONE), BrightsideMessageBody(""))
 
         def _consume(cnx: BrokerConnection, timesup: int) -> None:
             try:

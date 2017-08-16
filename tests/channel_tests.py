@@ -48,7 +48,7 @@ class ChannelFixture(unittest.TestCase):
         """
 
         body = BrightsideMessageBody("test message")
-        header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.MT_COMMAND)
         message = BrightsideMessage(header, body)
 
         fake_queue = [message]
@@ -72,7 +72,7 @@ class ChannelFixture(unittest.TestCase):
         """
 
         body = BrightsideMessageBody("test message")
-        header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.MT_COMMAND)
         message = BrightsideMessage(header, body)
 
         fake_queue = [message]
@@ -96,7 +96,7 @@ class ChannelFixture(unittest.TestCase):
         """
 
         body = BrightsideMessageBody("test message")
-        header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.MT_COMMAND)
         message = BrightsideMessage(header, body)
 
         fake_queue = [message]
@@ -116,7 +116,7 @@ class ChannelFixture(unittest.TestCase):
         """
 
         body = BrightsideMessageBody("test message")
-        header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.command)
+        header = BrightsideMessageHeader(uuid4(), "test topic", BrightsideMessageType.MT_COMMAND)
         message = BrightsideMessage(header, body)
 
         fake_queue = []
