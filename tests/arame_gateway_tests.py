@@ -63,7 +63,7 @@ class ArameGatewayTests(unittest.TestCase):
 
         self._consumer.purge()
 
-        self._producer.send(message)
+        self._producer.send(message)  # if errors with akes 1 positional argument but 2 were given then manually purge
 
         read_message = self._consumer.receive(3)
         self._consumer.acknowledge(read_message)
@@ -82,7 +82,7 @@ class ArameGatewayTests(unittest.TestCase):
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(), BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
 
-        self._consumer.purge()
+        self._consumer.purge()  # if errors with akes 1 positional argument but 2 were given then manually purge
 
         self._producer.send(message)
 
@@ -108,7 +108,7 @@ class ArameGatewayTests(unittest.TestCase):
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(), BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
 
-        self._consumer.purge()
+        self._consumer.purge()  # if errors with akes 1 positional argument but 2 were given then manually purge
 
         self._producer.send(message)
 

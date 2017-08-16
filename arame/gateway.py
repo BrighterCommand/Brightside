@@ -75,7 +75,7 @@ class ArameProducer(BrightsideProducer):
             sender.publish(message.body.bytes,
                            headers=_build_message_header(message),
                            exchange=self._exchange,
-                           serializer='json',  # todo: fix this for the mime type of the message
+                           content_type="text/plain",
                            routing_key=message.header.topic,
                            declare=[self._exchange])
 

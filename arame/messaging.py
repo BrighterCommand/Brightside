@@ -162,8 +162,9 @@ class ArameMessageFactory:
 
     def _read_payload(self, message: Message) -> (str, ReadError):
         if not message.errors:
-            body_text = decode_escapes(message.body)
-            return body_text[1:-1], None
+            # body_text = decode_escapes(message.body.decode("utf-8"))
+            body_text = message.body.decode("unicode_escape")
+            return body_text, None
         else:
             errors = ", ".join(message.errors)
             return "", ReadError("Could not parse message. Errors: {}".format(errors))
