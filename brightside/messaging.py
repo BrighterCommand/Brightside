@@ -55,6 +55,11 @@ class BrightsideMessageBody:
         """ Assumes that the body is text/plain i.e. json or xml and so returns the content as a string"""
         return self._encoded_body.decode()
 
+    @property
+    def bytes(self) -> bytes:
+        """ returns the """
+        return self._encoded_body
+
 
 @unique
 class BrightsideMessageType(Enum):

@@ -72,10 +72,10 @@ class ArameProducer(BrightsideProducer):
         def _publish(sender: Producer) -> None:
             logger.debug("Send message {body} to broker {amqpuri} with routing key {routing_key}"
                          .format(body=message, amqpuri=self._amqp_uri, routing_key=message.header.topic))
-            sender.publish(message.body.value,
+            sender.publish(message.body.bytes,
                            headers=_build_message_header(message),
                            exchange=self._exchange,
-                           serializer='json',   # todo: fix this for the mime type of the message
+                           serializer='json',  # todo: fix this for the mime type of the message
                            routing_key=message.header.topic,
                            declare=[self._exchange])
 
