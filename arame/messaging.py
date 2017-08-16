@@ -1,10 +1,10 @@
 """"
-File         : kombu_messaging.py
+File         : messaging.py
 Author           : ian
 Created          : 09-28-2016
 
 Last Modified By : ian
-Last Modified On : 09-28-2016
+Last Modified On : 16-08-2017
 ***********************************************************************
 The MIT License (MIT)
 Copyright © 2016 Ian Cooper <ian_hammond_cooper@yahoo.co.uk>
@@ -49,23 +49,6 @@ message_delay_milliseconds_header = "x-delay"
 message_delayed_milliseconds_header = "x-delay"
 message_original_message_id_header = "x-original-message-id"
 message_delivery_tag_header = "DeliveryTag"
-
-# See http://stackoverflow.com/questions/4020539/process-escape-sequences-in-a-string-in-python
-ESCAPE_SEQUENCE_RE = re.compile(r'''
-    ( \\U........      # 8-digit hex escapes
-    | \\u....          # 4-digit hex escapes
-    | \\x..            # 2-digit hex escapes
-    | \\[0-7]{1,3}     # Octal escapes
-    | \\N\{[^}]+\}     # Unicode characters by name
-    | \\[\\'"abfnrtv]  # Single-character escapes
-    )''', re.UNICODE | re.VERBOSE)
-
-
-def decode_escapes(s):
-    def decode_match(match):
-        return codecs.decode(match.group(0), 'unicode-escape')
-
-    return ESCAPE_SEQUENCE_RE.sub(decode_match, s)
 
 
 class ReadError:
@@ -162,7 +145,6 @@ class ArameMessageFactory:
 
     def _read_payload(self, message: Message) -> (str, ReadError):
         if not message.errors:
-            # body_text = decode_escapes(message.body.decode("utf-8"))
             body_text = message.body.decode("unicode_escape")
             return body_text, None
         else:
@@ -192,7 +174,7 @@ class KombuMessageFactory:
                 raise MessagingException("Missing id on message, this is a required field")
             brightside_message_header[message_id_header] = str(identity)
 
-        def _add_message_type(brightside_message_header: Dict, brightside_message_type: BrightsideMessageType) -> None:
+        def _add_message_type(brightside_message_header: Dict, brightside_message_type: str) -> None:
             if brightside_message_type is None:
                 raise MessagingException("Missing type on message, this is a required field")
             brightside_message_header[message_type_header] = brightside_message_type
