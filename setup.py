@@ -3,13 +3,13 @@ from setuptools import setup, find_packages
 setup(
     name='brightside',
     description='Provides a command dispatcher and task queue to support CQRS and microservices ',
-    long_description="""See the Github project page (https://github.com/BrigherCommand/Brightside) for more on Brightside""",
+    long_description="""See the Github project page (https://github.com/BrighterCommand/Brightside) for more on Brightside""",
     license='MIT',
     keywords=['brightside', 'messaging', 'command', 'dispatcher', 'invoker',  'CQRS', 'microservices'],
     version='0.3',
     author='Ian Cooper',
     author_email='ian_hammond_cooper@yahoo.co.uk',
-    url='https://github.com/BrigherCommand/Brightside',
+    url='https://github.com/BrighterCommand/Brightside',
     packages=find_packages(exclude=["tests", "examples"]),
     install_requires=['ez_setup', 'kombu', 'poll', 'mock'],
     package_data={
