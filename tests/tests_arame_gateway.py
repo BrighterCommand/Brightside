@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """"
-File             : arame_gateway_tests.py
+File             : tests_arame_gateway.py
 Author           : ian
 Created          : 09-01-2016
 
