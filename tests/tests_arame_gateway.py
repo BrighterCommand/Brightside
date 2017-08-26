@@ -125,3 +125,8 @@ class ArameGatewayTests(unittest.TestCase):
         self.assertEqual(request.id, deserialized_request.id)
 
 
+if __name__ == '__main__':
+    unittest.main()
+
+
+

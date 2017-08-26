@@ -103,3 +103,7 @@ class PipelineTests(unittest.TestCase):
         self.assertFalse(handler.called, "Did not expect the handle method on the handler to be called with the message")
         self.assertTrue(handler.call_count == 3, "Expected two retries of the pipeline")
 
+
+if __name__ == '__main__':
+    unittest.main()
+

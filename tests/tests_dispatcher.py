@@ -175,6 +175,11 @@ class DispatcherFixture(unittest.TestCase):
         self.assertTrue(pipeline_two.empty())
 
 
+if __name__ == '__main__':
+    unittest.main()
+
+
+
 
 
 

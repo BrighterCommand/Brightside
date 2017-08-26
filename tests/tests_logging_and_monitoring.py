@@ -61,3 +61,8 @@ class LoggingAndMonitoringFixture(unittest.TestCase):
 
         mock_log.assert_has_calls([call(logging.DEBUG, "Entering handle " + str(request)),
                                    call(logging.DEBUG, "Exiting handle " + str(request))])
+
+
+if __name__ == '__main__':
+    unittest.main()
+

@@ -264,3 +264,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         self.assertTrue(command_processor.send.call_count, 3)
 
+if __name__ == '__main__':
+    unittest.main()
+
+

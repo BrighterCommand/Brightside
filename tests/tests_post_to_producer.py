@@ -119,3 +119,7 @@ class PostTests(unittest.TestCase):
 
         self.assertTrue(was_exception_thrown)
 
+
+if __name__ == '__main__':
+    unittest.main()
+

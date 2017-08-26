@@ -95,6 +95,11 @@ class CommandProcessorFixture(unittest.TestCase):
         self.assertFalse(exception_thrown, "Did not expect an exception to be thrown where there are no handlers for an event")
 
 
+if __name__ == '__main__':
+    unittest.main()
+
+
+
 
 
 
