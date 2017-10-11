@@ -15,5 +15,11 @@ If this environment variable is not set, we will generate an error
 
 ## Docker Compose File
 The Docker Compose File is intended to provide sufficient infrastructure for you to run tests that require backing stores or Message Oriented Middleware.
+The testrunner.py script finds all test fixtures with the naming convention tests_* and runs them
+To run the tests just use ./run_rests.sh
+This shell script will docker-compose up the required infrastructure and a container for Brightside code and tests; that container is kept running with top
+Once running we use docker-exec to run the python test runner script
+
+
 
 
