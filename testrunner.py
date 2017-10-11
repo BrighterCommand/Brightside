@@ -2,7 +2,7 @@ import unittest
 
 
 def discover_and_run():
-    tests = unittest.TestLoader().discover('tests', pattern='*_tests.py')
+    tests = unittest.TestLoader().discover('tests', pattern='tests_*.py')
     result = unittest.TextTestRunner(verbosity=2).run(tests)
     if result.wasSuccessful():
         return 0
