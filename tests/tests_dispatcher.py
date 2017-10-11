@@ -38,9 +38,11 @@ from brightside.connection import Connection
 from brightside.dispatch import ConsumerConfiguration, Dispatcher, DispatcherState, Performer
 from brightside.messaging import BrightsideConsumerConfiguration, BrightsideMessageHeader, BrightsideMessageBody, \
     BrightsideMessage, BrightsideMessageType, BrightsideMessageBodyType
+from tests.config import TestConfig
 from tests.dispatcher_testdoubles import mock_command_processor_factory, mock_consumer_factory
 from tests.handlers_testdoubles import MyCommand, MyEvent, map_my_command_to_request, map_my_event_to_request
 
+config = TestConfig()
 
 class PerformerFixture(unittest.TestCase):
     def test_stop_performer(self):
@@ -52,7 +54,7 @@ class PerformerFixture(unittest.TestCase):
         """
         request = MyCommand()
         pipeline = Queue()
-        connection = Connection("amqp://guest:guest@localhost:5762/%2f", "examples.perfomer.exchange")
+        connection = Connection(config.broker_uri, "examples.perfomer.exchange")
         configuration = BrightsideConsumerConfiguration(pipeline, "performer.test.queue", "examples.tests.mycommand")
         performer = Performer("test_channel", connection, configuration, mock_consumer_factory, mock_command_processor_factory, map_my_command_to_request)
 
@@ -85,7 +87,7 @@ class DispatcherFixture(unittest.TestCase):
         """
         request = MyCommand()
         pipeline = Queue()
-        connection = Connection("amqp://guest:guest@localhost:5762/%2f", "examples.perfomer.exchange")
+        connection = Connection(config.broker_uri, "examples.perfomer.exchange")
         configuration = BrightsideConsumerConfiguration(pipeline, "dispatcher.test.queue", "examples.tests.mycommand")
         consumer = ConsumerConfiguration(connection, configuration, mock_consumer_factory, mock_command_processor_factory, map_my_command_to_request)
         dispatcher = Dispatcher({"MyCommand": consumer})
@@ -113,7 +115,7 @@ class DispatcherFixture(unittest.TestCase):
             When I restart a consumer
             Then the dispatcher should have one running consumer
         """
-        connection = Connection("amqp://guest:guest@localhost:5762/%2f", "examples.perfomer.exchange")
+        connection = Connection(config.broker_uri, "examples.perfomer.exchange")
 
         # First consumer
         request = MyCommand()

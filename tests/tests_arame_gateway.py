@@ -34,6 +34,7 @@ from multiprocessing import Queue
 import unittest
 from uuid import uuid4
 
+from tests.config import TestConfig
 from tests.messaging_testdoubles import TestMessage
 from arame.gateway import ArameConsumer, ArameProducer
 from arame.messaging import JsonRequestSerializer
@@ -46,7 +47,8 @@ class ArameGatewayTests(unittest.TestCase):
     test_topic = "kombu_gateway_tests"
 
     def setUp(self):
-        self._connection = Connection("amqp://guest:guest@localhost:5672//", "paramore.brightside.exchange", is_durable=True)
+        config = TestConfig()
+        self._connection = Connection(config.broker_uri, "paramore.brightside.exchange", is_durable=True)
         self._producer = ArameProducer(self._connection)
         self._pipeline = Queue()
         self._consumer = ArameConsumer(self._connection, BrightsideConsumerConfiguration(self._pipeline,

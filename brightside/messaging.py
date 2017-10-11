@@ -89,7 +89,7 @@ class BrightsideMessageHeader:
         different language implementations are compatible
     """
     def __init__(self, identity: UUID, topic: str, message_type: BrightsideMessageType, correlation_id: UUID = None,
-                 reply_to: str = None, content_type: str = "text/plain", handled_count: int = None) -> None:
+                 reply_to: str = None, content_type: str = "text/plain", header_bag: dict = None, handled_count: int = None) -> None:
         self._id = identity
         self._topic = topic
         self._message_type = message_type
@@ -97,7 +97,12 @@ class BrightsideMessageHeader:
         self._reply_to = reply_to
         self._content_type = content_type
         self._msg = None
+        self._header_bag = header_bag
         self._handled_count = handled_count if handled_count is not None else 0
+
+    @property
+    def bag(self) -> dict:
+        return self._header_bag
 
     @property
     def handled_count(self) -> int:
@@ -178,11 +183,11 @@ class BrightsideMessageStore(metaclass=ABCMeta):
 
     """
     @abstractmethod
-    def add(self, message: BrightsideMessage):
+    def add(self, message: BrightsideMessage) -> None:
         pass
 
     @abstractmethod
-    def get_message(self, key: UUID):
+    def get_message(self, key: UUID) -> BrightsideMessage:
         pass
 
 

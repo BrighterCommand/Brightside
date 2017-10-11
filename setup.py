@@ -11,7 +11,7 @@ setup(
     author_email='ian_hammond_cooper@yahoo.co.uk',
     url='https://github.com/BrighterCommand/Brightside',
     packages=find_packages(exclude=["tests", "examples"]),
-    install_requires=['ez_setup', 'kombu', 'poll', 'mock'],
+    install_requires=['amqp', 'ez_setup', 'kombu', 'poll', 'mock', 'sqlalchemy'],
     package_data={
         # If any package contains *.txt or *.rst files, include them:
         '': ['*.txt', '*.rst'],

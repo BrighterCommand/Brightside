@@ -221,3 +221,5 @@ class JsonRequestSerializer:
             return self._request
 
         return json.loads(self._serialized_request, object_hook=_unserialize_instance)
+
+
