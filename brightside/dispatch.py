@@ -132,7 +132,7 @@ def _sub_process_main(started_event: Event,
     consumer = consumer_factory(connection, consumer_configuration, logger)
     channel = Channel(name=channel_name, consumer=consumer, pipeline=consumer_configuration.pipeline)
 
-    #TODO: Fix defaults that need passed in config values
+    # TODO: Fix defaults that need passed in config values
     command_processor = command_processor_factory(channel_name)
     message_pump = MessagePump(command_processor=command_processor, channel=channel, mapper_func=mapper_func,
                                timeout=500, unacceptable_message_limit=None, requeue_count=None)
@@ -154,7 +154,7 @@ class ConsumerConfiguration:
         :param connection: The connection to the broker
         :param consumer: The consumer we want to create (routing key, queue etc)
         :param consumer_factory: A factory to create a consumer to read from a broker, a given implementation i.e. arame
-        :param the command processor factory creates a command procesoor configured for a pipeline
+        the command processor factory creates a command procesoor configured for a pipeline
         :param mapper_func: Maps between messages on the queue and requests (commnands/events)
         """
         self._connection = connection
@@ -238,7 +238,7 @@ class Dispatcher:
             for k, v in self._performers.items():
                 event = Event()
                 dispatcher._running_performers[k] = v.run(event)
-                event.wait(3) # TODO: Do we want to configure this polling interval?
+                event.wait(3)  # TODO: Do we want to configure this polling interval?
 
             initialized.set()
 
@@ -258,7 +258,7 @@ class Dispatcher:
                 self._performers[channel].stop()
                 process.join(10)  # TODO: We really want to make this configurable
 
-            self._state == DispatcherState.ds_stopping
+            self._state = DispatcherState.ds_stopping
             self._supervisor.join(5)
             self._running_performers.clear()
             self._supervisor = None

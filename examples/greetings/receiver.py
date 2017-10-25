@@ -49,7 +49,7 @@ KEYBOARD_INTERRUPT_SLEEP = 3    # How long before checking for a keyhoard interr
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
-def command_processor_factory(channel_name:str):
+def command_processor_factory(channel_name: str):
     handler = HelloWorldCommandHandler()
 
     subscriber_registry = Registry()

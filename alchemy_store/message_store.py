@@ -39,7 +39,7 @@ from brightside.messaging import BrightsideMessage, BrightsideMessageHeader, Bri
 from sqlalchemy import select
 
 
-def  deserialize_header_bag(bag:str) -> dict:
+def  deserialize_header_bag(bag: str) -> dict:
     return json.load(bag)
 
 
@@ -76,6 +76,7 @@ class SqlAlchemyMessageStore(BrightsideMessageStore):
         conn = engine.connect()
         with conn.begin() as trans:
             conn.execute(ins)
+            trans.commit()
         conn.close()
 
     def get_message(self, key: UUID) -> BrightsideMessage:

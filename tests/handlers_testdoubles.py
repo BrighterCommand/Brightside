@@ -128,7 +128,7 @@ class MyHandlerBreakingAfterRetry(Handler):
         if self._callCount <= 3:
             raise RuntimeError("Fake error to check for retry")
         else:
-            #We should not get here, as we will run out of retries
+            # We should not get here, as we will run out of retries
             self._called = True
 
     @property

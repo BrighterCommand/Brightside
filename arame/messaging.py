@@ -28,9 +28,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 **********************************************************************i*
 """
-import codecs
 import json
-import re
 from typing import Dict
 from uuid import UUID, uuid4
 
@@ -79,7 +77,7 @@ class ArameMessageFactory:
                 return UUID(header)
             else:
                 self._has_read_errors = True
-                return ""
+                return uuid4()
 
         def _get_message_id() -> UUID:
             header, err = self._read_header(message_id_header, message)
@@ -200,7 +198,7 @@ class JsonRequestSerializer:
             d = {}
             d.update(vars(obj))
             for key, value in d.items():
-                if isinstance(value, UUID): # json does not know how to serliaze a UUID, so convince it is a string instead
+                if isinstance(value, UUID):  # json does not know how to serliaze a UUID, so convince it is a string instead
                     d[key] = str(value)
             return d
 

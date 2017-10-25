@@ -38,7 +38,7 @@ from brightside.registry import Registry
 
 class HelloWorldCommandHandler(Handler):
     def handle(self, request):
-        print("Hello {}".format(request.Addressee))
+        print("Hello {}".format(request.addressee))
 
 
 class HelloWorldCommand(Command):
@@ -47,7 +47,7 @@ class HelloWorldCommand(Command):
         self._addressee = addressee
 
     @property
-    def Addressee(self):
+    def addressee(self):
         return self._addressee
 
 

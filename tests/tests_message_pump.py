@@ -70,7 +70,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         # add messages to that when channel is called it returns first message then quit message
         response_queue = [message, quit_message]
-        channel_spec = {"receive.side_effect" : response_queue}
+        channel_spec = {"receive.side_effect": response_queue}
         channel.configure_mock(**channel_spec)
 
         message_pump.run()
@@ -104,7 +104,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         # add messages to that when channel is called it returns first message then qui tmessage
         response_queue = [message, quit_message]
-        channel_spec = {"receive.side_effect" : response_queue}
+        channel_spec = {"receive.side_effect": response_queue}
         channel.configure_mock(**channel_spec)
 
         excepton_caught = False
@@ -138,7 +138,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         # add messages to that when channel is called it returns first message then qui tmessage
         response_queue = [message, quit_message]
-        channel_spec = {"receive.side_effect" : response_queue}
+        channel_spec = {"receive.side_effect": response_queue}
         channel.configure_mock(**channel_spec)
 
         message_pump.run()
@@ -176,7 +176,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         # add messages to that when channel is called it returns first message then qui tmessage
         response_queue = [message_one, message_two, message_three, message_four, quit_message]
-        channel_spec = {"receive.side_effect" : response_queue}
+        channel_spec = {"receive.side_effect": response_queue}
         channel.configure_mock(**channel_spec)
 
         message_pump.run()
@@ -210,10 +210,10 @@ class MessagePumpFixture(unittest.TestCase):
 
         # add messages to that when channel is called it returns first message then qui tmessage
         response_queue = [message, quit_message]
-        channel_spec = {"receive.side_effect" : response_queue}
+        channel_spec = {"receive.side_effect": response_queue}
         channel.configure_mock(**channel_spec)
 
-        requeue_spec = {"send.side_effect" : DeferMessageException()}
+        requeue_spec = {"send.side_effect": DeferMessageException()}
         command_processor.configure_mock(**requeue_spec)
 
         message_pump.run()
@@ -244,7 +244,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         channel.add(message)
 
-        requeue_spec = {"send.side_effect" : DeferMessageException()}
+        requeue_spec = {"send.side_effect": DeferMessageException()}
 
         command_processor.configure_mock(**requeue_spec)
 

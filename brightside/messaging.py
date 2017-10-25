@@ -109,7 +109,7 @@ class BrightsideMessageHeader:
         return self._handled_count
 
     @property
-    def id (self) -> UUID:
+    def id(self) -> UUID:
         return self._id
 
     def increment_handled_count(self):
@@ -251,7 +251,7 @@ class BrightsideConsumer(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def receive(self, timeout: int) -> BrightsideMessage:
+    def receive(self, timeout: float) -> BrightsideMessage:
         pass
 
     def requeue(self, message) -> None:

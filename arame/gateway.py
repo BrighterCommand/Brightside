@@ -55,7 +55,7 @@ class ArameProducer(BrightsideProducer):
         'max_retries': 3,
     }
 
-    def __init__(self, connection: Connection, logger:logging.Logger=None) -> None:
+    def __init__(self, connection: Connection, logger: logging.Logger=None) -> None:
         self._amqp_uri = connection.amqp_uri
         self._cnx = BrokerConnection(hostname=connection.amqp_uri)
         self._exchange = Exchange(connection.exchange, type=connection.exchange_type, durable=connection.is_durable)
@@ -115,7 +115,7 @@ class ArameConsumer(BrightsideConsumer):
         self._logger = logger or logging.getLogger(__name__)
         self._queue = Queue(self._queue_name, exchange=self._exchange, routing_key=self._routing_key)
         self._msg = None  # Kombu Message
-        self._message = None # Brightside Message
+        self._message = None  # Brightside Message
 
         # TODO: Need to fix the argument types with default types issue
 

@@ -75,6 +75,7 @@ class Registry:
 
         return self._registry[key]
 
+
 R = TypeVar('R', bound=Request)
 
 

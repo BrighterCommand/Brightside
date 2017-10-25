@@ -3,4 +3,5 @@ ez-setup==0.9
 kombu==4.1.0
 mock==2.0.0
 poll==1.0
-SQLAlchemy==1.1.14
+psycopg2==2.7.3.1
+SQLAlchemy==1.1.13

@@ -81,7 +81,7 @@ class Channel:
     def name(self) -> ChannelName:
         return self._name
 
-    def receive(self, timeout: int) -> BrightsideMessage:
+    def receive(self, timeout: float) -> BrightsideMessage:
         if self._state is ChannelState.stopped:
             raise ChannelFailureException("Channel has been stopped, cannot resume listening")
 

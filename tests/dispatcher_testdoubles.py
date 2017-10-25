@@ -38,7 +38,7 @@ from brightside.messaging import BrightsideConsumer, BrightsideConsumerConfigura
 from brightside.message_factory import create_null_message
 
 
-def mock_command_processor_factory(channel_name:str):
+def mock_command_processor_factory(channel_name: str):
     """
     callback function to create a command processor
     channel_name is intended to help and implementor set up the command processor, but its not needed here

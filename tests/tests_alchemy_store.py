@@ -31,10 +31,37 @@ THE SOFTWARE.
 """
 
 import unittest
+from uuid import uuid4
+
+from alchemy_store.message_store import SqlAlchemyMessageStore
+from brightside.messaging import BrightsideMessageHeader, BrightsideMessageBody, BrightsideMessageType, BrightsideMessage
 
 
 class AlchemyStoreTests(unittest.TestCase):
-    pass
+    def test_get_from_message_store(self):
+        """
+            Given that I have a message in
+            When I retrieve from the store by Id
+            THen it should be found
+        """
+        store = SqlAlchemyMessageStore()
+
+        message_id = uuid4()
+        topic = "test topic"
+        header = BrightsideMessageHeader(message_id, topic, BrightsideMessageType.MT_COMMAND)
+        content = "test content"
+        body = BrightsideMessageBody(content)
+        message = BrightsideMessage(header, body)
+
+        store.add(message)
+
+        retreived_message = store.get_message(message_id)
+
+        self.assertNotEqual(BrightsideMessageType.MT_NONE, retreived_message.header.message_type)
+        self.assertEqual(message_id, retreived_message.id)
+        self.assertEqual(content, retreived_message.body)
+
+
 
 
 

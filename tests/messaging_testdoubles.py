@@ -31,9 +31,10 @@ THE SOFTWARE.
 """
 
 import uuid
+from typing import List
 
 from brightside.handler import Command
-from brightside.messaging import BrightsideMessage, BrightsideMessageStore, BrightsideProducer
+from brightside.messaging import BrightsideMessage,BrightsideMessageHeader, BrightsideMessageBody, BrightsideMessageType, BrightsideMessageStore, BrightsideProducer
 
 
 class FakeMessageStore(BrightsideMessageStore):
@@ -53,7 +54,9 @@ class FakeMessageStore(BrightsideMessageStore):
         for msg in self._messages:
             if msg.id == key:
                 return msg
-        return None
+        return BrightsideMessage(
+            BrightsideMessageHeader(identity=uuid4(), topic="", message_type=BrightsideMessageType.MT_NONE),
+            BrightsideMessageBody(""))
 
 
 class FakeProducer(BrightsideProducer):

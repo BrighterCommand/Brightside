@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 from typing import List
 
-from brightside.messaging import BrightsideConsumer, BrightsideMessage
+from brightside.messaging import BrightsideConsumer
 
 
 class FakeConsumer(BrightsideConsumer):
