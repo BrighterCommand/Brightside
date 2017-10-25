@@ -31,7 +31,8 @@ THE SOFTWARE.
 import os
 
 from brightside.exceptions import ConfigurationException
-from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, DateTime
+from brightside.messaging import BrightsideMessageType
+from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, DateTime, Enum
 from alchemy_store.custom_types import GUID
 
 db_uri = os.environ.get('BRIGHTER_MESSAGE_STORE_URL')
@@ -46,7 +47,7 @@ messages = Table('messages', metadata,
                  Column('Id', Integer, primary_key=True),
                  Column('MessageId', GUID, nullable=False),
                  Column('Topic', String(255), nullable=True),
-                 Column('MessageType', String(32), nullable=True),
+                 Column('MessageType', Enum(BrightsideMessageType), nullable=True),
                  Column('Timestamp', DateTime, nullable=True),
                  Column('HeaderBag', String, nullable=True),
                  Column('Body', String, nullable=True)

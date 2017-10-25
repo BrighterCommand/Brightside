@@ -59,7 +59,7 @@ class AlchemyStoreTests(unittest.TestCase):
 
         self.assertNotEqual(BrightsideMessageType.MT_NONE, retreived_message.header.message_type)
         self.assertEqual(message_id, retreived_message.id)
-        self.assertEqual(content, retreived_message.body)
+        self.assertEqual(content, retreived_message.body.value)
 
 
 

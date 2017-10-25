@@ -47,7 +47,10 @@ class BrightsideMessageBody:
         ensure that payload is binary compatible. plain/text should be encoded as a UTF8 byte array for example
     """
     def __init__(self, body: str, body_type: str = BrightsideMessageBodyType.text_plain) -> None:
-        self._encoded_body = body.encode()
+        if body is not None:
+            self._encoded_body = body.encode()
+        else:
+            self._encoded_body = "".encode()
         self._body_type = body_type
 
     @property

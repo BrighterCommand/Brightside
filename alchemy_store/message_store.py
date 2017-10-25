@@ -40,8 +40,13 @@ from sqlalchemy import select
 
 
 def  deserialize_header_bag(bag: str) -> dict:
-    return json.load(bag)
+    if bag is not None:
+        return json.loads(bag)
+    else:
+        return dict()
 
+
+# def serialize_header_bag(json: Dict[]) ->
 
 def create_empty_message() -> BrightsideMessage:
     return BrightsideMessage(
@@ -55,7 +60,7 @@ def create_message(row) -> BrightsideMessage:
         BrightsideMessageHeader(
             identity=row[messages.c.MessageId],
             topic=row[messages.c.Topic],
-            message_type=BrightsideMessageType[row.c.MessageType],
+            message_type=row[messages.c.MessageType],
             header_bag=bag),
         BrightsideMessageBody(row[messages.c.Body])
     )
@@ -72,6 +77,7 @@ class SqlAlchemyMessageStore(BrightsideMessageStore):
             Topic=message.header.topic,
             MessageType=message.header.message_type,
             Timestamp=datetime.utcnow(),
+            Body=message.body.value
             )
         conn = engine.connect()
         with conn.begin() as trans:
@@ -82,7 +88,7 @@ class SqlAlchemyMessageStore(BrightsideMessageStore):
     def get_message(self, key: UUID) -> BrightsideMessage:
         msg = create_empty_message()
 
-        query = select([messages])
+        query = select([messages]).where(messages.c.MessageId == key)
         conn = engine.connect()
 
         result = conn.execute(query)
