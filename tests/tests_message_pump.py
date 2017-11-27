@@ -223,6 +223,42 @@ class MessagePumpFixture(unittest.TestCase):
         self.assertTrue(command_processor.send.call_count, 1)
         self.assertEqual(channel.requeue.call_count, 1)
 
+    def test_the_pump_should_ack_failed_messages(self):
+        """
+            Given that I have a message pump for a channel
+             When the handler raises an application exception for that message
+             Then ack the message to prevent 'poison pill' message
+        """
+        handler = MyCommandHandler()
+        request = MyCommand()
+        channel = Mock(spec=Channel)
+        command_processor = Mock(spec=CommandProcessor)
+
+        message_pump = MessagePump(command_processor, channel, map_my_command_to_request)
+
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.MT_COMMAND)
+        body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
+                                     BrightsideMessageBodyType.application_json)
+        message = BrightsideMessage(header, body)
+
+        quit_message = create_quit_message()
+
+        # add messages to that when channel is called it returns first message then qui tmessage
+        response_queue = [message, quit_message]
+        channel_spec = {"receive.side_effect": response_queue}
+        channel.configure_mock(**channel_spec)
+
+        app_error_spec = {"send.side_effect": ZeroDivisionError()}
+        command_processor.configure_mock(**app_error_spec)
+
+        message_pump.run()
+
+        channel.receive.assert_called_with(0.5)
+        self.assertEqual(channel.receive.call_count, 2)
+        self.assertTrue(command_processor.send.call_count, 1)
+        self.assertEqual(channel.acknowledge.call_count, 1)
+
+
     def test_handle_requeue_has_upper_bound(self):
         """
         Given that I have a channel
