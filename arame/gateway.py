@@ -113,7 +113,7 @@ class ArameConsumer(BrightsideConsumer):
         self._is_durable = configuration.is_durable
         self._message_factory = ArameMessageFactory()
         self._logger = logger or logging.getLogger(__name__)
-        self._queue = Queue(self._queue_name, exchange=self._exchange, routing_key=self._routing_key)
+        self._queue = Queue(self._queue_name, exchange=self._exchange, routing_key=self._routing_key, durable=self._is_durable)
         self._msg = None  # Kombu Message
         self._message = None  # Brightside Message
 
