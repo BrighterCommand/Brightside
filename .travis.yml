@@ -1,11 +1,20 @@
   sudo: required
+  services:
+    - postgresql
+    - rabbitmq
+  env:
+    - BRIGHTER_MESSAGE_STORE_URL="postgresql://postgres:@localhost/travis_ci_test"
+  language: python
   python:
-    - 3.6
+    - "3.6"
   cache: pip
   install:
     - pip install -r requirements.txt
+  before_script:
+    - psql -c 'create database travis_ci_test;' -U postgres
   script:
     - python testrunner.py
+    
   notifications:
   webhooks:
     urls:
