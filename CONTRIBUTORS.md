@@ -12,3 +12,7 @@ Brightside contributors (sorted alphabeticaly)
   
    * Various fixes
    
+**[Fay Kazakou](https://github.com/ekazakou)**
+
+   * Various fixes
+   
