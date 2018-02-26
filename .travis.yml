@@ -1,6 +1,7 @@
   sudo: required
   services:
     - postgresql
+    - rabbitmq
   env:
     - BRIGHTER_MESSAGE_STORE_URL="postgresql://postgres:@localhost/travis_ci_test"
   language: python
