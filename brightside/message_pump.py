@@ -88,12 +88,12 @@ class MessagePump:
                 time.sleep(self._timeout)
                 continue
             elif message.header.message_type == BrightsideMessageType.MT_QUIT:
-                self._logger.debug("MessagePump: Quit receiving messages from {} on thread # ".format(
+                self._logger.debug("MessagePump: Quit receiving messages from {} on thread # {}".format(
                     self._channel.name, current_thread().name))
                 self._channel.end()
                 break
             elif message.header.message_type == BrightsideMessageType.MT_UNACCEPTABLE:
-                self._logger.debug("MessagePump: Failed to parse a message from the incoming message with id {} from {} on thread # ".format(
+                self._logger.debug("MessagePump: Failed to parse a message from the incoming message with id {} from {} on thread # {} ".format(
                     message.id, self._channel.name, current_thread().name))
                 self._acknowledge_message(message)
                 self._increment_unacceptable_message_count()
@@ -109,7 +109,7 @@ class MessagePump:
             except ConfigurationException:
                 raise
             except:
-                self._logger.error("MessagePump: Failed to dispatch the message with id {} from {} on thread #".format(
+                self._logger.error("MessagePump: Failed to dispatch the message with id {} from {} on thread # {}".format(
                     message.id, self._channel.name, current_thread().name))
 
             self._acknowledge_message(message)
