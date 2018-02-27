@@ -254,7 +254,8 @@ class Dispatcher:
 
     def end(self):
         if self._state == DispatcherState.ds_running:
-            for channel, process in self._running_performers.items():
+
+            for channel, process in list(self._running_performers.items()):
                 self._performers[channel].stop()
                 process.join(10)  # TODO: We really want to make this configurable
 
