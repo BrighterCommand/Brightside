@@ -12,6 +12,10 @@ Brightside contributors (sorted alphabeticaly)
   
    * Various fixes
    
+**[Toby Henderson](https://github.com/holytshirt)**
+
+   * Various fixes
+   
 **[Fay Kazakou](https://github.com/ekazakou)**
 
    * Various fixes
