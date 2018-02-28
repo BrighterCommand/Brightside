@@ -55,7 +55,7 @@ class FakeMessageStore(BrightsideMessageStore):
             if msg.id == key:
                 return msg
         return BrightsideMessage(
-            BrightsideMessageHeader(identity=uuid4(), topic="", message_type=BrightsideMessageType.MT_NONE),
+            BrightsideMessageHeader(identity=uuid.uuid4(), topic="", message_type=BrightsideMessageType.MT_NONE),
             BrightsideMessageBody(""))
 
 
