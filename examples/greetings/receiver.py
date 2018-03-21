@@ -44,7 +44,7 @@ from brightside.registry import Registry
 from arame.messaging import JsonRequestSerializer
 from src.core import HelloWorldCommand, HelloWorldCommandHandler
 
-KEYBOARD_INTERRUPT_SLEEP = 3    # How long before checking for a keyhoard interrupt
+KEYBOARD_INTERRUPT_SLEEP = 3    # How long before checking for a keyboard interrupt
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
@@ -71,7 +71,7 @@ def map_my_command_to_request(message: BrightsideMessage) -> Request:
 
 def run():
     pipeline = Queue()
-    connection = Connection("pyamqp://guest:guest@localhost:5672//", "paramore.brightside.exchange", is_durable=True)
+    connection = Connection("amqp://guest:guest@localhost:5672//", "paramore.brightside.exchange", is_durable=True)
     configuration = BrightsideConsumerConfiguration(pipeline, "examples_greetings_queue", "hello_world")
     consumer = ConsumerConfiguration(connection, configuration, consumer_factory, command_processor_factory, map_my_command_to_request)
     dispatcher = Dispatcher({"HelloWorldCommand": consumer})

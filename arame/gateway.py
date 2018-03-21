@@ -121,15 +121,34 @@ class ArameConsumer(BrightsideConsumer):
         self._msg = None  # Kombu Message
         self._message = None  # Brightside Message
 
-        self._conn = BrokerConnection(hostname=self._amqp_uri, heartbeat=30)
-        self._channel = self._conn.channel()
+        self._establish_connection(BrokerConnection(hostname=self._amqp_uri, heartbeat=10))
+        self._establish_channel()
+        self._establish_consumer()
 
     def acknowledge(self, message: BrightsideMessage):
         if (self._message is not None) and self._message.id == message.id:
             self._msg.ack()
             self._msg = None
 
-    def establish_connection(self, conn: BrokerConnection) -> None:
+    def _ensure_connection(self):
+        # We can get connection aborted before we try to read, so despite ensure()
+        # we check the connection here
+        if self._conn.connected is not True:
+            self._conn = self._conn.clone()
+            self._conn.ensure_connection(max_retries=3)
+            self._channel = self._conn.channel()
+            self._consumer.revive(self._channel)
+            self._consumer.consume()
+
+    def _establish_channel(self):
+        self._channel = self._conn.channel()
+
+    def _establish_consumer(self):
+        self._consumer = Consumer(channel=self._channel, queues=[self._queue], callbacks=[self._read_message])
+        self._consumer.qos(prefetch_count=1)
+        self._consumer.consume()
+
+    def _establish_connection(self, conn: BrokerConnection) -> None:
         """
         We don't use a pool here. We only have one consumer connection per process, so
         we get no value from a pool, and we want to use a heartbeat to keep the consumer
@@ -156,11 +175,17 @@ class ArameConsumer(BrightsideConsumer):
             cnsmr.purge()
             self._message = None
 
-        with Consumer(channel=self._channel, queues=[self._queue], callbacks=[_purge_messages]) as consumer:
-            ensure_kwargs = self.RETRY_OPTIONS.copy()
-            ensure_kwargs['errback'] = _purge_errors
-            safe_purge = self._conn.ensure(consumer, _purge_messages, **ensure_kwargs)
-            safe_purge(consumer)
+        self._ensure_connection()
+
+        ensure_kwargs = self.RETRY_OPTIONS.copy()
+        ensure_kwargs['errback'] = _purge_errors
+        safe_purge = self._conn.ensure(self._consumer, _purge_messages, **ensure_kwargs)
+        safe_purge(self._consumer)
+
+    def _read_message(self, body: str, msg: KombuMessage) -> None:
+        self._logger.debug("Monitoring event received at: %s headers: %s payload: %s", datetime.utcnow().isoformat(), msg.headers, body)
+        self._msg = msg
+        self._message = self._message_factory.create_message(msg)
 
     def receive(self, timeout: int) -> BrightsideMessage:
 
@@ -183,17 +208,12 @@ class ArameConsumer(BrightsideConsumer):
         def _consume_errors(exc, interval: int)-> None:
             self._logger.error('Draining error: %s, will retry triggering in %s seconds', exc, interval, exc_info=True)
 
-        def _read_message(body: str, msg: KombuMessage) -> None:
-            self._logger.debug("Monitoring event received at: %s headers: %s payload: %s", datetime.utcnow().isoformat(), msg.headers, body)
-            self._msg = msg
-            self._message = self._message_factory.create_message(msg)
+        self._ensure_connection()
 
-        with Consumer(channel=self._channel, queues=[self._queue], callbacks=[_read_message]) as consumer:
-            consumer.qos(prefetch_count=1)
-            ensure_kwargs = self.RETRY_OPTIONS.copy()
-            ensure_kwargs['errback'] = _consume_errors
-            safe_drain = self._conn.ensure(consumer, _consume, **ensure_kwargs)
-            safe_drain(self._conn, timeout)
+        ensure_kwargs = self.RETRY_OPTIONS.copy()
+        ensure_kwargs['errback'] = _consume_errors
+        safe_drain = self._conn.ensure(self._consumer, _consume, **ensure_kwargs)
+        safe_drain(self._conn, timeout)
 
         return self._message
 
@@ -205,9 +225,12 @@ class ArameConsumer(BrightsideConsumer):
 
     def stop(self):
         if self._conn is not None:
+            self._logger.debug("Consumer closing: %s", self._queue_name)
+            self._consumer.close()
             self._logger.debug("Consumer closed; closing connection: %s", self._queue_name)
             self._conn.maybe_close_channel(self._conn.channel())
             self._conn.close()
             self._conn = None
+
 
 
