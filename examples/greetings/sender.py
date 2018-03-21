@@ -46,7 +46,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 def map_hellworldcommand_to_message(request: HelloWorldCommand) -> BrightsideMessage:
     message_body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json())
-    message = BrightsideMessage(BrightsideMessageHeader(request.id, "hello_world", BrightsideMessageType.MT_COMMAND), message_body)
+    message = BrightsideMessage(BrightsideMessageHeader(identity=request.id, topic="hello_world", message_type=BrightsideMessageType.MT_COMMAND), message_body)
     return message
 
 

@@ -50,7 +50,7 @@ class MessagePump:
         self._command_processor = command_processor
         self._channel = channel
         self._mapper_func = mapper_func
-        self._timeout = 1000 / timeout if timeout else 0.5
+        self._timeout = timeout / 1000 if timeout else 0.5
         self._logger = logging.getLogger(__name__)
         self._unacceptable_message_limit = unacceptable_message_limit if unacceptable_message_limit else 500
         self._unacceptable_message_count = 0
@@ -116,6 +116,8 @@ class MessagePump:
 
         self._logger.debug("MessagePump: Finished running message loop, no longer receiving messages from {} on thread # {}".format(
             self._channel.name, current_thread().name))
+
+        self._channel.end()
 
     def _acknowledge_message(self, message: BrightsideMessage) -> None:
         self._logger.debug("MessagePump: Acknowledge message {} from {} on thread # {}".format(

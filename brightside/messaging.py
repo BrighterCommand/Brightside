@@ -257,6 +257,11 @@ class BrightsideConsumer(metaclass=ABCMeta):
     def receive(self, timeout: float) -> BrightsideMessage:
         pass
 
+    @abstractmethod
     def requeue(self, message) -> None:
+        pass
+
+    @abstractmethod
+    def stop(self):
         pass
 

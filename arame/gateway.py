@@ -33,6 +33,9 @@ from typing import Dict
 from uuid import uuid4
 import logging
 from datetime import datetime
+import weakref
+from eventlet import spawn_after
+import socket
 
 from kombu import BrokerConnection, Consumer, Exchange, Producer as Producer, Queue
 from kombu.pools import connections
@@ -84,6 +87,7 @@ class ArameProducer(BrightsideProducer):
 
         self._logger.debug("Connect to broker {amqpuri}".format(amqpuri=self._amqp_uri))
 
+        # Producer uses a pool, because you may have many instances in your code, but no heartbeat as a result
         with connections[self._cnx].acquire(block=True) as conn:
             with Producer(conn) as producer:
                 ensure_kwargs = self.RETRY_OPTIONS.copy()
@@ -117,12 +121,24 @@ class ArameConsumer(BrightsideConsumer):
         self._msg = None  # Kombu Message
         self._message = None  # Brightside Message
 
-        # TODO: Need to fix the argument types with default types issue
+        self._conn = BrokerConnection(hostname=self._amqp_uri, heartbeat=30)
+        self._channel = self._conn.channel()
 
     def acknowledge(self, message: BrightsideMessage):
         if (self._message is not None) and self._message.id == message.id:
             self._msg.ack()
             self._msg = None
+
+    def establish_connection(self, conn: BrokerConnection) -> None:
+        """
+        We don't use a pool here. We only have one consumer connection per process, so
+        we get no value from a pool, and we want to use a heartbeat to keep the consumer
+        collection alive, which does not work with a pool
+        :return: the connection to the transport
+        """
+        self._logger.debug("Establishing connection.")
+        self._conn = conn.ensure_connection(max_retries=3)
+        self._logger.debug('Got connection: %s', conn.as_uri())
 
     def has_acknowledged(self, message):
         if (self._message is not None) and self._message.id == message.id:
@@ -140,14 +156,11 @@ class ArameConsumer(BrightsideConsumer):
             cnsmr.purge()
             self._message = None
 
-        connection = BrokerConnection(hostname=self._amqp_uri)
-        with connections[connection].acquire(block=True) as conn:
-            self._logger.debug('Got connection: %s', conn.as_uri())
-            with Consumer(conn, queues=[self._queue], callbacks=[_purge_messages]) as consumer:
-                ensure_kwargs = self.RETRY_OPTIONS.copy()
-                ensure_kwargs['errback'] = _purge_errors
-                safe_purge = conn.ensure(consumer, _purge_messages, **ensure_kwargs)
-                safe_purge(consumer)
+        with Consumer(channel=self._channel, queues=[self._queue], callbacks=[_purge_messages]) as consumer:
+            ensure_kwargs = self.RETRY_OPTIONS.copy()
+            ensure_kwargs['errback'] = _purge_errors
+            safe_purge = self._conn.ensure(consumer, _purge_messages, **ensure_kwargs)
+            safe_purge(consumer)
 
     def receive(self, timeout: int) -> BrightsideMessage:
 
@@ -157,7 +170,8 @@ class ArameConsumer(BrightsideConsumer):
             try:
                 cnx.drain_events(timeout=timesup)
             except kombu_exceptions.TimeoutError:
-                pass
+                self._logger.debug("Time out reading from queue %s", self._queue_name)
+                cnx.heartbeat_check()
             except(kombu_exceptions.ChannelLimitExceeded,
                    kombu_exceptions.ConnectionLimitExceeded,
                    kombu_exceptions.OperationalError,
@@ -174,22 +188,26 @@ class ArameConsumer(BrightsideConsumer):
             self._msg = msg
             self._message = self._message_factory.create_message(msg)
 
-        connection = BrokerConnection(hostname=self._amqp_uri)
-        with connections[connection].acquire(block=True) as conn:
-            self._logger.debug('Got connection: %s', conn.as_uri())
-            with Consumer(conn, queues=[self._queue], callbacks=[_read_message]) as consumer:
-                consumer.qos(prefetch_count=1)
-                ensure_kwargs = self.RETRY_OPTIONS.copy()
-                ensure_kwargs['errback'] = _consume_errors
-                safe_drain = conn.ensure(consumer, _consume, **ensure_kwargs)
-                safe_drain(conn, timeout)
+        with Consumer(channel=self._channel, queues=[self._queue], callbacks=[_read_message]) as consumer:
+            consumer.qos(prefetch_count=1)
+            ensure_kwargs = self.RETRY_OPTIONS.copy()
+            ensure_kwargs['errback'] = _consume_errors
+            safe_drain = self._conn.ensure(consumer, _consume, **ensure_kwargs)
+            safe_drain(self._conn, timeout)
 
         return self._message
 
     def requeue(self, message: BrightsideMessage) -> None:
         """
-            TODO: has does a consumeure resend
+            TODO: has does a consumer resend
         """
         self._msg.requeue()
+
+    def stop(self):
+        if self._conn is not None:
+            self._logger.debug("Consumer closed; closing connection: %s", self._queue_name)
+            self._conn.maybe_close_channel(self._conn.channel())
+            self._conn.close()
+            self._conn = None
 
 

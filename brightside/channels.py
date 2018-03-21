@@ -75,6 +75,7 @@ class Channel:
         self._consumer.acknowledge(message)
 
     def end(self) -> None:
+        self._consumer.stop()
         self._state = ChannelState.stopped
 
     @property

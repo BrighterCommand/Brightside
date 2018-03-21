@@ -1,5 +1,6 @@
 amqp==2.2.1
 ez-setup==0.9
+eventlet==0.22.1
 kombu==4.1.0
 mock==2.0.0
 poll==1.0

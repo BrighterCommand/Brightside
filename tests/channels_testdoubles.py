@@ -65,3 +65,6 @@ class FakeConsumer(BrightsideConsumer):
     def requeue(self, message):
         self._queue.append(message)
 
+    def stop(self):
+        pass
+
