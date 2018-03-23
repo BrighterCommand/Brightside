@@ -121,7 +121,7 @@ class ArameConsumer(BrightsideConsumer):
         self._msg = None  # Kombu Message
         self._message = None  # Brightside Message
 
-        self._establish_connection(BrokerConnection(hostname=self._amqp_uri, heartbeat=10))
+        self._establish_connection(BrokerConnection(hostname=self._amqp_uri, connect_timeout=30, heartbeat=30))
         self._establish_channel()
         self._establish_consumer()
 
@@ -155,9 +155,19 @@ class ArameConsumer(BrightsideConsumer):
         collection alive, which does not work with a pool
         :return: the connection to the transport
         """
-        self._logger.debug("Establishing connection.")
-        self._conn = conn.ensure_connection(max_retries=3)
-        self._logger.debug('Got connection: %s', conn.as_uri())
+        try:
+            self._logger.debug("Establishing connection.")
+            self._conn = conn.ensure_connection(max_retries=3)
+            self._logger.debug('Got connection: %s', conn.as_uri())
+        except kombu_exceptions.OperationalError as oe:
+            self._logger.error("Error connecting to RMQ, could not retry %s", oe)
+            # Try to clean up the mess
+            if self._conn is not None:
+                self._conn.close()
+            else:
+                conn.close()
+
+
 
     def has_acknowledged(self, message):
         if (self._message is not None) and self._message.id == message.id:
