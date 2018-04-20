@@ -6,7 +6,7 @@ setup(
     long_description="""See the Github project page (https://github.com/BrighterCommand/Brightside) for more on Brightside""",
     license='MIT',
     keywords=['brightside', 'messaging', 'command', 'dispatcher', 'invoker',  'CQRS', 'microservices'],
-    version='0.6',
+    version='0.6.4',
     author='Ian Cooper',
     author_email='ian_hammond_cooper@yahoo.co.uk',
     url='https://github.com/BrighterCommand/Brightside',

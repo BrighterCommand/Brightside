@@ -208,12 +208,13 @@ class BrightsideConsumerConfiguration:
     A class to encapsulate the configuration required to create a Brightside Consumer
     Required because we need to pass the parameters to a performer that runs the message pump on another thread
     """
-    def __init__(self, pipeline: Queue, queue_name: str, routing_key: str, prefetch_count: int=1, is_durable: bool=False):
+    def __init__(self, pipeline: Queue, queue_name: str, routing_key: str, prefetch_count: int=1, is_durable: bool=False, is_ha=False):
         self._pipeline = pipeline
         self._queue_name = queue_name
         self._routing_key = routing_key
         self._prefetch_count = prefetch_count
         self._is_durable = is_durable
+        self._is_ha = is_ha
 
     @property
     def pipeline(self):
@@ -234,6 +235,10 @@ class BrightsideConsumerConfiguration:
     @property
     def is_durable(self) -> bool:
         return self._is_durable
+
+    @property
+    def is_ha(self) -> bool:
+        return self._is_ha
 
 
 class BrightsideConsumer(metaclass=ABCMeta):

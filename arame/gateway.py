@@ -117,7 +117,13 @@ class ArameConsumer(BrightsideConsumer):
         self._is_durable = configuration.is_durable
         self._message_factory = ArameMessageFactory()
         self._logger = logger or logging.getLogger(__name__)
-        self._queue = Queue(self._queue_name, exchange=self._exchange, routing_key=self._routing_key, durable=self._is_durable)
+        consumer_arguments = {}
+        if configuration.is_ha is True:
+            consumer_arguments = {"x-hapolicy": "all"}
+
+        self._queue = Queue(self._queue_name, exchange=self._exchange, routing_key=self._routing_key,
+                            durable=self._is_durable, consumer_arguments=consumer_arguments)
+
         self._msg = None  # Kombu Message
         self._message = None  # Brightside Message
 
@@ -167,8 +173,6 @@ class ArameConsumer(BrightsideConsumer):
             else:
                 conn.close()
 
-
-
     def has_acknowledged(self, message):
         if (self._message is not None) and self._message.id == message.id:
             if self._msg is None:
@@ -214,6 +218,9 @@ class ArameConsumer(BrightsideConsumer):
                    kombu_exceptions.MessageStateError,
                    kombu_exceptions.LimitExceeded) as err:
                 raise ChannelFailureException("Error connecting to RabbitMQ, see inner exception for details", err)
+            except (OSError, IOError) as socket_err:
+                self._reset_connection()
+                raise ChannelFailureException("Error connecting to RabbitMQ, see inner exception for details", socket_err)
 
         def _consume_errors(exc, interval: int)-> None:
             self._logger.error('Draining error: %s, will retry triggering in %s seconds', exc, interval, exc_info=True)
@@ -227,6 +234,13 @@ class ArameConsumer(BrightsideConsumer):
 
         return self._message
 
+    def _reset_connection(self) -> None:
+        self._logger.debug('Reset connection to RabbitMQ following socket error')
+        self._conn.close()
+        self._establish_connection(BrokerConnection(hostname=self._amqp_uri, connect_timeout=30, heartbeat=30))
+        self._establish_channel()
+        self._establish_consumer()
+
     def requeue(self, message: BrightsideMessage) -> None:
         """
             TODO: has does a consumer resend
@@ -235,10 +249,7 @@ class ArameConsumer(BrightsideConsumer):
 
     def stop(self):
         if self._conn is not None:
-            self._logger.debug("Consumer closing: %s", self._queue_name)
-            self._consumer.close()
-            self._logger.debug("Consumer closed; closing connection: %s", self._queue_name)
-            self._conn.maybe_close_channel(self._conn.channel())
+            self._logger.debug("Closing connection: %s", self._conn)
             self._conn.close()
             self._conn = None
 
