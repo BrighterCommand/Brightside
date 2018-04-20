@@ -20,6 +20,7 @@ To run the tests just use ./run_rests.sh
 This shell script will docker-compose up the required infrastructure and a container for Brightside code and tests; that container is kept running with top
 Once running we use docker-exec to run the python test runner script
 
+[![Build Status](https://travis-ci.org/BrighterCommand/Brightside.svg?branch=master)](https://travis-ci.org/BrighterCommand/Brightside)
 
 
 
