@@ -141,6 +141,7 @@ We have chosen a strategy of Pause Minority on a partition
         * Socket error on Brightside client
         * Consumer connects to new node ater delay
             * Does not seem to consume the messages from the queue -- appears to be a zombie
+            * Fixed - handle socker errors by recreating connection
 
 4. Assume I connect to Node B. I consume from the master on A via Node B. (I don't consume from the slave, that is there in case A fails). Then C gets a partition and cannot be seen. I have chosen an Pause Minority strategy.
     * RMQ will pause the partioned node

@@ -119,7 +119,7 @@ class ArameConsumer(BrightsideConsumer):
         self._logger = logger or logging.getLogger(__name__)
         consumer_arguments = {}
         if configuration.is_ha is True:
-            consumer_arguments = {"x-hapolicy": "all"}
+            consumer_arguments = {"x-ha-policy": "all"}
 
         self._queue = Queue(self._queue_name, exchange=self._exchange, routing_key=self._routing_key,
                             durable=self._is_durable, consumer_arguments=consumer_arguments)

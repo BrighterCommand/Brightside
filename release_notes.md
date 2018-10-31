@@ -1,3 +1,23 @@
+# Release Process
+We release to PyPI using twine.
+
+The proces is
+
+1. Increment the project version in setup.py
+2. Clear the dist directory
+3. From the project root, run the setup tools to build source distribution and wheel in the dist directory
+
+```
+python setup.py sdist bdist_wheel
+```
+
+4. From the root, upload via twine
+
+```
+twine upload dist/*
+````
+
+
 # Release Notes
 
 Packages are available on [PyPI](https://pypi.org/project/brightside/)
@@ -5,6 +25,9 @@ Packages are available on [PyPI](https://pypi.org/project/brightside/)
 You can use the run_tests.sh file to run the test suite via docker. The script uses the tests-docker-compose.yml file to provide the dependencies for the tests, deploys the code and then runs the test suite.
 
 ## Master
+
+## Release 0.6.5
+-- RMQ, Fixed the issue with the parameter "x-hapolicy" which should have been "x-ha-policy". Needed to support older 2.X versions
 
 ## Release 0.6.4
 -- Fixed issues produced during partition testing
@@ -20,7 +43,7 @@ Assume I connect to Node B. I consume from the master on A via Node B. (I don't 
     * We will timeout on our connection
     * I need to stop talking to B and talk to A or C.
 
-    ###### Results
+    Results
     * Consumer is Idle
         * RMQ reports that only one mirror now exists
         * Socket error on Brightside client
