@@ -6,12 +6,12 @@ setup(
     long_description="""See the Github project page (https://github.com/BrighterCommand/Brightside) for more on Brightside""",
     license='MIT',
     keywords=['brightside', 'messaging', 'command', 'dispatcher', 'invoker',  'CQRS', 'microservices'],
-    version='0.6.5',
+    version='0.6.6',
     author='Ian Cooper',
     author_email='ian_hammond_cooper@yahoo.co.uk',
     url='https://github.com/BrighterCommand/Brightside',
     packages=find_packages(exclude=["tests", "examples"]),
-    install_requires=['amqp', 'ez_setup', 'eventlet', 'kombu', 'poll', 'mock', 'sqlalchemy'],
+    install_requires=['amqp', 'ez_setup', 'eventlet', 'kombu', 'poll', 'psycopg2', 'sqlalchemy'],
     package_data={
         # If any package contains *.txt or *.rst files, include them:
         '': ['*.txt', '*.rst'],
