@@ -218,7 +218,7 @@ class ArameConsumer(BrightsideConsumer):
                    kombu_exceptions.MessageStateError,
                    kombu_exceptions.LimitExceeded) as err:
                 raise ChannelFailureException("Error connecting to RabbitMQ, see inner exception for details", err)
-            except (OSError, IOError) as socket_err:
+            except (OSError, IOError, ConnectionError) as socket_err:
                 self._reset_connection()
                 raise ChannelFailureException("Error connecting to RabbitMQ, see inner exception for details", socket_err)
 

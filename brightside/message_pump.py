@@ -78,10 +78,6 @@ class MessagePump:
                 self._logger.warning("MessagePump: ChannelFailureException receiving messages from {} on thread # {}".format(
                     self._channel.name, current_thread().name), exc_info=1)
                 continue
-            except ConnectionAbortedError:
-                self._logger.warning("MessagePump: ConnectionAbortedError receiving messages from {} on thread # {}".format(
-                    self._channel.name, current_thread().name), exc_info=1)
-                continue
             except Exception:
                 self._logger.warning("MessagePump: Exception receiving messages from {} on thread # {}".format(
                     self._channel.name, current_thread().name), exc_info=1)

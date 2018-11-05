@@ -1,5 +1,5 @@
 amqp==2.2.1
-brightside==0.6.5
+brightside==0.6.7
 ez-setup==0.9
 eventlet==0.22.1
 kombu==4.1.0
