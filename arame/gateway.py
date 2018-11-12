@@ -33,9 +33,8 @@ from typing import Dict
 from uuid import uuid4
 import logging
 from datetime import datetime
-import weakref
-from eventlet import spawn_after
-import socket
+import threading
+import time
 
 from kombu import BrokerConnection, Consumer, Exchange, Producer as Producer, Queue
 from kombu.pools import connections
@@ -120,6 +119,8 @@ class ArameConsumer(BrightsideConsumer):
         consumer_arguments = {}
         if configuration.is_ha is True:
             consumer_arguments = {"x-ha-policy": "all"}
+
+        self._is_long_running_handler = configuration.is_long_runing_handler
 
         self._queue = Queue(self._queue_name, exchange=self._exchange, routing_key=self._routing_key,
                             durable=self._is_durable, consumer_arguments=consumer_arguments)
@@ -246,6 +247,31 @@ class ArameConsumer(BrightsideConsumer):
             TODO: has does a consumer resend
         """
         self._msg.requeue()
+
+    def run_heartbeat_continuously(self) -> threading.Event:
+        """
+        For a long runing handler, there is a danger that we do not send a heartbeat message or activity on the
+        connection whilst we are running the handler. With a default heartbeat of 30s, for example, there is a risk
+        that a handler which takes more than 15s will fail to send the heartbeat in time and then the broker will
+        reset the connection. So we spin up another thread, where the user has marked the thread as having a
+        long-running thread
+        :return: an event to cancel the thread
+        """
+
+        cancellation_event = threading.Event()
+
+        # Effectively a no-op if we are not actually a long-running thread
+        if not self._is_long_running_handler:
+            return cancellation_event
+
+        def _send_heartbeat(cnx: BrokerConnection, period: int) -> None:
+                while not cancellation_event.is_set():
+                    cnx.heartbeat_check()
+                    time.sleep(period)
+
+        heartbeat_thread = threading.Thread(target=_send_heartbeat, args=(self._conn, 10, ))
+        heartbeat_thread.run()
+        return cancellation_event
 
     def stop(self):
         if self._conn is not None:

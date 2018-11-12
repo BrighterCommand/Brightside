@@ -101,8 +101,12 @@ class MessagePump:
 
             try:
                 # Serviceable message
+                self._channel.start_heartbeat()
+
                 request = self._translate_message(message)
                 self._dispatch_message(message.header, request)
+
+                self._channel.end_heartbeat()
             except DeferMessageException:
                 self._requeue_message(message)
                 continue

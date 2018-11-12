@@ -150,11 +150,11 @@ class ConsumerConfiguration:
                  mapper_func: Callable[[BrightsideMessage], Request]) -> None:
         """
         The configuration parameters for one consumer - can create one or more performers from this, each of which is
-        a message pump reading froma queue
+        a message pump reading from a queue
         :param connection: The connection to the broker
         :param consumer: The consumer we want to create (routing key, queue etc)
         :param consumer_factory: A factory to create a consumer to read from a broker, a given implementation i.e. arame
-        the command processor factory creates a command procesoor configured for a pipeline
+        the command processor factory creates a command processor configured for a pipeline
         :param mapper_func: Maps between messages on the queue and requests (commnands/events)
         """
         self._connection = connection

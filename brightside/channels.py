@@ -30,6 +30,7 @@ THE SOFTWARE.
 """
 from enum import Enum
 from multiprocessing import Queue
+from threading import Event
 
 from brightside.exceptions import ChannelFailureException
 from brightside.messaging import BrightsideConsumer, BrightsideMessage
@@ -67,6 +68,7 @@ class Channel:
         self._name = ChannelName(name)
         self._queue = pipeline
         self._state = ChannelState.initialized
+        self._cancel_heartbeat = None  # type: Event
 
     def __len__(self):
         return self._queue.qsize()
@@ -77,6 +79,10 @@ class Channel:
     def end(self) -> None:
         self._consumer.stop()
         self._state = ChannelState.stopped
+
+    def end_heartbeat(self) -> None:
+        if self._cancel_heartbeat is not None:
+            self._cancel_heartbeat.set()
 
     @property
     def name(self) -> ChannelName:
@@ -97,6 +103,9 @@ class Channel:
     @property
     def state(self) -> ChannelState:
         return self._state
+
+    def start_heartbeat(self):
+        self. _cancel_heartbeat = self._consumer.run_heartbeat_continuously()
 
     def stop(self):
         self._queue.put(create_quit_message())

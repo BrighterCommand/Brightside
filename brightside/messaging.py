@@ -33,6 +33,7 @@ from uuid import UUID, uuid4
 from abc import ABCMeta, abstractmethod
 from enum import Enum, unique
 from multiprocessing import Queue
+from threading import Event
 
 
 class BrightsideMessageBodyType:
@@ -207,14 +208,19 @@ class BrightsideConsumerConfiguration:
     """
     A class to encapsulate the configuration required to create a Brightside Consumer
     Required because we need to pass the parameters to a performer that runs the message pump on another thread
+    Use is_long_running_handler when you expect a handler to take more than about 10s to execute, this will instruct
+    the consumer to spin up a separate thread to send a heartbeat over the connection. Due to the GIL this won't help
+    you that much if your handler is CPU bound though.
     """
-    def __init__(self, pipeline: Queue, queue_name: str, routing_key: str, prefetch_count: int=1, is_durable: bool=False, is_ha=False):
+    def __init__(self, pipeline: Queue, queue_name: str, routing_key: str, prefetch_count: int=1,
+                 is_durable: bool=False, is_ha: bool=False, is_long_running_handler: bool=False):
         self._pipeline = pipeline
         self._queue_name = queue_name
         self._routing_key = routing_key
         self._prefetch_count = prefetch_count
         self._is_durable = is_durable
         self._is_ha = is_ha
+        self._is_long_running = is_long_running_handler
 
     @property
     def pipeline(self):
@@ -240,6 +246,10 @@ class BrightsideConsumerConfiguration:
     def is_ha(self) -> bool:
         return self._is_ha
 
+    @property
+    def is_long_runing_handler(self) -> bool:
+        return self._is_long_running
+
 
 class BrightsideConsumer(metaclass=ABCMeta):
     """The comoonent that receives messages from a broker. Usually abstracts a queue for subscribing to a topic on the
@@ -264,6 +274,10 @@ class BrightsideConsumer(metaclass=ABCMeta):
 
     @abstractmethod
     def requeue(self, message) -> None:
+        pass
+
+    @abstractmethod
+    def run_heartbeat_continuously(self) -> Event:
         pass
 
     @abstractmethod
