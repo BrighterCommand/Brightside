@@ -106,16 +106,18 @@ class MessagePump:
                 request = self._translate_message(message)
                 self._dispatch_message(message.header, request)
 
-                self._channel.end_heartbeat()
             except DeferMessageException:
                 self._requeue_message(message)
+                self._channel.end_heartbeat()
                 continue
             except ConfigurationException:
+                self._channel.end_heartbeat()
                 raise
             except:
                 self._logger.error("MessagePump: Failed to dispatch the message with id {} from {} on thread # {}".format(
                     message.id, self._channel.name, current_thread().name))
 
+            self._channel.end_heartbeat()
             self._acknowledge_message(message)
 
         self._logger.debug("MessagePump: Finished running message loop, no longer receiving messages from {} on thread # {}".format(
