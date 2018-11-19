@@ -29,6 +29,8 @@ THE SOFTWARE.
 ***********************************************************************
 """
 
+from threading import Event
+
 from queue import Queue
 
 from brightside.channels import ChannelFailureException, ChannelName, ChannelState
@@ -41,6 +43,7 @@ class FakeChannel:
         self._name = ChannelName(name)
         self._queue = Queue()
         self._state = ChannelState.initialized
+        self._cancel_heartbeat = None  # type: Event
 
     def __len__(self):
         return self._queue.qsize()
@@ -53,6 +56,10 @@ class FakeChannel:
 
     def end(self) -> None:
         self._state = ChannelState.stopped
+
+    def end_heartbeat(self) -> None:
+        if self._cancel_heartbeat is not None:
+            self._cancel_heartbeat.set()
 
     @property
     def name(self) -> ChannelName:
@@ -73,6 +80,9 @@ class FakeChannel:
     @property
     def state(self) -> ChannelState:
         return self._state
+
+    def start_heartbeat(self):
+        self. _cancel_heartbeat = Event()
 
     def stop(self):
         self._queue.put(create_quit_message())

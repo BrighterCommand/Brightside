@@ -54,7 +54,6 @@ class MessagePumpFixture(unittest.TestCase):
              When I read a message from that channel
              Then the message should be dispatched to a handler
         """
-        handler = MyCommandHandler()
         request = MyCommand()
         channel = Mock(spec=Channel)
         command_processor = Mock(spec=CommandProcessor)
@@ -80,15 +79,41 @@ class MessagePumpFixture(unittest.TestCase):
         self.assertTrue(command_processor.send.call_count, 1)
         self.assertEqual(channel.acknowledge.call_count, 1)
 
+    def test_the_pump_should_trigger_a_heartbeat(self):
+        """
+            Given that I have a message pump for a channel
+             When I read a message from that channel
+             Then the message should be dispatched to a handler
+        """
+        request = MyCommand()
+        channel = Mock(spec=Channel)
+        command_processor = Mock(spec=CommandProcessor)
 
-    # TODO: Test for message pump is missing
+        message_pump = MessagePump(command_processor, channel, map_my_command_to_request)
+
+        header = BrightsideMessageHeader(uuid4(), request.__class__.__name__, BrightsideMessageType.MT_COMMAND)
+        body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(),
+                                     BrightsideMessageBodyType.application_json)
+        message = BrightsideMessage(header, body)
+
+        quit_message = create_quit_message()
+
+        # add messages to that when channel is called it returns first message then quit message
+        response_queue = [message, quit_message]
+        channel_spec = {"receive.side_effect": response_queue}
+        channel.configure_mock(**channel_spec)
+
+        message_pump.run()
+
+        self.assertEqual(channel.start_heartbeat.call_count, 1)
+        self.assertEqual(channel.end_heartbeat.call_count, 1)
+
     def test_the_pump_should_fail_on_a_missing_message_mapper(self):
         """
             Given that I have a message pump for a channel
              When there is no message mapper for that channel
              Then we shhould throw an exception to indicate a configuration error
         """
-        handler = MyCommandHandler()
         request = MyCommand()
         channel = Mock(spec=Channel)
         command_processor = Mock(spec=CommandProcessor)
@@ -102,7 +127,7 @@ class MessagePumpFixture(unittest.TestCase):
 
         quit_message = create_quit_message()
 
-        # add messages to that when channel is called it returns first message then qui tmessage
+        # add messages to that when channel is called it returns first message then quit message
         response_queue = [message, quit_message]
         channel_spec = {"receive.side_effect": response_queue}
         channel.configure_mock(**channel_spec)
@@ -115,14 +140,12 @@ class MessagePumpFixture(unittest.TestCase):
 
         self.assertTrue(excepton_caught)
 
-
     def test_the_pump_should_acknowledge_and_discard_an_unacceptable_message(self):
         """
             Given that I have a message pump for a channel
              When I cannot read the message received from that channel
              Then I should acknowledge the message to dicard it
         """
-        handler = MyCommandHandler()
         request = MyCommand()
         channel = Mock(spec=Channel)
         command_processor = Mock(spec=CommandProcessor)
@@ -156,7 +179,6 @@ class MessagePumpFixture(unittest.TestCase):
              When I cannot read the message received from that channel
              Then I should acknowledge the message to dicard it
         """
-        handler = MyCommandHandler()
         request = MyCommand()
         channel = Mock(spec=Channel)
         command_processor = Mock(spec=CommandProcessor)
@@ -184,7 +206,7 @@ class MessagePumpFixture(unittest.TestCase):
         # Should acknowledge first three so that a 'poison pill' message cannot block our queue
         self.assertEqual(channel.acknowledge.call_count, unacceptable_message_limit)
         # We should dispose of the channel, by sending ourselves a quit messages
-        self.assertEqual(channel.end.call_count, 1)
+        self.assertEqual(channel.end.call_count, 2)
         # Does not send the message, just discards it
         self.assertEqual(command_processor.send.call_count, 0)
 
@@ -194,7 +216,6 @@ class MessagePumpFixture(unittest.TestCase):
              When the handler raises a defer message exception for that message
              Then requeue the message
         """
-        handler = MyCommandHandler()
         request = MyCommand()
         channel = Mock(spec=Channel)
         command_processor = Mock(spec=CommandProcessor)
@@ -229,7 +250,6 @@ class MessagePumpFixture(unittest.TestCase):
              When the handler raises an application exception for that message
              Then ack the message to prevent 'poison pill' message
         """
-        handler = MyCommandHandler()
         request = MyCommand()
         channel = Mock(spec=Channel)
         command_processor = Mock(spec=CommandProcessor)
@@ -258,7 +278,6 @@ class MessagePumpFixture(unittest.TestCase):
         self.assertTrue(command_processor.send.call_count, 1)
         self.assertEqual(channel.acknowledge.call_count, 1)
 
-
     def test_handle_requeue_has_upper_bound(self):
         """
         Given that I have a channel
@@ -266,7 +285,6 @@ class MessagePumpFixture(unittest.TestCase):
         I should ask the consumer to requeue, up to a retry limit
         So that poison messages do not fill our queues
         """
-        handler = MyCommandHandler()
         request = MyCommand()
         channel = FakeChannel(name="MyCommand")
         command_processor = Mock(spec=CommandProcessor)
@@ -299,6 +317,7 @@ class MessagePumpFixture(unittest.TestCase):
         t.join()
 
         self.assertTrue(command_processor.send.call_count, 3)
+
 
 if __name__ == '__main__':
     unittest.main()

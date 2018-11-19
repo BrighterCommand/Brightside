@@ -65,7 +65,7 @@ class ArameGatewayTests(unittest.TestCase):
 
         self._consumer.purge()
 
-        self._producer.send(message)  # if errors with akes 1 positional argument but 2 were given then manually purge
+        self._producer.send(message)  # if errors with 1 positional argument but 2 were given then manually purge
 
         read_message = self._consumer.receive(3)
         self._consumer.acknowledge(read_message)
