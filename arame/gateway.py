@@ -116,6 +116,7 @@ class ArameConsumer(BrightsideConsumer):
         self._is_durable = configuration.is_durable
         self._message_factory = ArameMessageFactory()
         self._logger = logger or logging.getLogger(__name__)
+        self._conn = None
         consumer_arguments = {}
         if configuration.is_ha is True:
             consumer_arguments = {"x-ha-policy": "all"}
@@ -264,13 +265,19 @@ class ArameConsumer(BrightsideConsumer):
         if not self._is_long_running_handler:
             return cancellation_event
 
-        def _send_heartbeat(cnx: BrokerConnection, period: int) -> None:
+        self._logger.debug("Running long running handler on %s", self._conn)
+
+        def _send_heartbeat(cnx: BrokerConnection, period: int, logger: logging.Logger) -> None:
                 while not cancellation_event.is_set():
                     cnx.heartbeat_check()
                     time.sleep(period)
+                logger.debug("Signalled to exit long-running handler heartbeat")
 
-        heartbeat_thread = threading.Thread(target=_send_heartbeat, args=(self._conn, 10, ))
-        heartbeat_thread.run()
+
+        heartbeat_thread = threading.Thread(target=_send_heartbeat, args=(self._conn, 10, self._logger), daemon=True)
+        self._logger.debug("Begin heartbeat thread for  %s", self._conn)
+        heartbeat_thread.start()
+        self._logger.debug("Heartbeat running on thread for  %s", self._conn)
         return cancellation_event
 
     def stop(self):

@@ -113,9 +113,9 @@ class MessagePump:
             except ConfigurationException:
                 self._channel.end_heartbeat()
                 raise
-            except:
-                self._logger.error("MessagePump: Failed to dispatch the message with id {} from {} on thread # {}".format(
-                    message.id, self._channel.name, current_thread().name))
+            except Exception as ex:
+                self._logger.error("MessagePump: Failed to dispatch the message with id {} from {} on thread # {} due to {}".format(
+                    message.id, self._channel.name, current_thread().name, ex))
 
             self._channel.end_heartbeat()
             self._acknowledge_message(message)
