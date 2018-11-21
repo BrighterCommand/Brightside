@@ -26,6 +26,10 @@ You can use the run_tests.sh file to run the test suite via docker. The script u
 
 ## Master
 
+## Release 0.6.9
+-- Fixed an issue where the heartbeat was not sent if a long-running handler took to long to process a request. You can now flag a connection as having a long-running handler and we will spin off a thread to send heartbeat messages whilst the hanlder is running.
+-- Reviewed where OSError exceptions were being caught. Moved lower and re-raised ans a ChannelFailure exception
+
 ## Release 0.6.5
 -- RMQ, Fixed the issue with the parameter "x-hapolicy" which should have been "x-ha-policy". Needed to support older 2.X versions
 
