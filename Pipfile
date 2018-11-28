@@ -12,6 +12,7 @@ poll = "*"
 "psycopg2" = "*"
 ez_setup = "*"
 SQLAlchemy = "*"
+pytest-env = "*"
 
 [dev-packages]
 

@@ -44,78 +44,80 @@ from brightside.messaging import BrightsideMessage, BrightsideConsumerConfigurat
 
 class ArameGatewayTests(unittest.TestCase):
 
-    test_topic = "kombu_gateway_tests"
-
     def setUp(self):
         config = TestConfig()
         self._connection = Connection(config.broker_uri, "paramore.brightside.exchange", is_durable=True)
         self._producer = ArameProducer(self._connection)
         self._pipeline = Queue()
-        self._consumer = ArameConsumer(self._connection, BrightsideConsumerConfiguration(self._pipeline,
-                                        "brightside_tests", self.test_topic))
 
     def test_posting_a_message(self):
         """Given that I have an RMQ message producer
             when I send that message via the producer
             then I should be able to read that message via the consumer
         """
-        header = BrightsideMessageHeader(uuid4(), self.test_topic, BrightsideMessageType.MT_COMMAND)
+        test_topic = "kombu_gateway_tests" + str(uuid4())
+        header = BrightsideMessageHeader(uuid4(), test_topic, BrightsideMessageType.MT_COMMAND)
         body = BrightsideMessageBody("test content")
         message = BrightsideMessage(header, body)
 
-        self._consumer.purge()
+        queue_name = "brightside_tests" + str(uuid4())
+        consumer = ArameConsumer(self._connection, BrightsideConsumerConfiguration(self._pipeline, queue_name, test_topic))
 
-        self._producer.send(message)  # if errors with 1 positional argument but 2 were given then manually purge
+        self._producer.send(message)
 
-        read_message = self._consumer.receive(3)
-        self._consumer.acknowledge(read_message)
+        read_message = consumer.receive(3)
+        consumer.acknowledge(read_message)
 
         self.assertEqual(message.id, read_message.id)
         self.assertEqual(message.body.value, read_message.body.value)
-        self.assertTrue(self._consumer.has_acknowledged(read_message))
+        self.assertTrue(consumer.has_acknowledged(read_message))
 
     def test_requeueing_a_message(self):
         """Given that I have an RMQ consumer
             when I requeue a message
             then it should return to the end of the queue
         """
+        test_topic = "kombu_gateway_tests" + str(uuid4())
         request = TestMessage()
-        header = BrightsideMessageHeader(uuid4(), self.test_topic, BrightsideMessageType.MT_COMMAND)
+        header = BrightsideMessageHeader(uuid4(), test_topic, BrightsideMessageType.MT_COMMAND)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(), BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
 
-        self._consumer.purge()  # if errors with akes 1 positional argument but 2 were given then manually purge
+        queue_name = "brightside_tests" + str(uuid4())
+        consumer = ArameConsumer(self._connection, BrightsideConsumerConfiguration(self._pipeline, queue_name, test_topic))
 
         self._producer.send(message)
 
-        read_message = self._consumer.receive(3)
+        read_message = consumer.receive(3)
 
-        self._consumer.requeue(read_message)
+        consumer.requeue(read_message)
 
         # should now be able to receive it again
-        reread_message = self._consumer.receive(3)
-        self._consumer.acknowledge(reread_message)
+        reread_message = consumer.receive(3)
+        consumer.acknowledge(reread_message)
 
         self.assertEqual(message.id, reread_message.id)
         self.assertEqual(message.body.value, reread_message.body.value)
-        self.assertTrue(self._consumer.has_acknowledged(reread_message))
+        self.assertTrue(consumer.has_acknowledged(reread_message))
 
     def test_posting_object_state(self):
         """Given that I have an RMQ producer
             when I deserialize an object via the producer
             then I should be able to re-hydrate it via the consumer
         """
+        test_topic = "kombu_gateway_tests" + str(uuid4())
         request = TestMessage()
-        header = BrightsideMessageHeader(uuid4(), self.test_topic, BrightsideMessageType.MT_COMMAND)
+        header = BrightsideMessageHeader(uuid4(), test_topic, BrightsideMessageType.MT_COMMAND)
         body = BrightsideMessageBody(JsonRequestSerializer(request=request).serialize_to_json(), BrightsideMessageBodyType.application_json)
         message = BrightsideMessage(header, body)
 
-        self._consumer.purge()  # if errors with akes 1 positional argument but 2 were given then manually purge
+        queue_name = "brightside_tests" + str(uuid4())
+        consumer = ArameConsumer(self._connection, BrightsideConsumerConfiguration(self._pipeline, queue_name, test_topic))
 
         self._producer.send(message)
 
-        read_message = self._consumer.receive(3)
-        self._consumer.acknowledge(read_message)
+        read_message = consumer.receive(3)
+        consumer.acknowledge(read_message)
 
         deserialized_request = JsonRequestSerializer(request=TestMessage(), serialized_request=read_message.body.value)\
             .deserialize_from_json()
