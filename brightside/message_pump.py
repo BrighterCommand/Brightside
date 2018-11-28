@@ -115,10 +115,8 @@ class MessagePump:
 
                 except DeferMessageException:
                     self._requeue_message(message)
-                    self._channel.end_heartbeat()
                     continue
                 except ConfigurationException:
-                    self._channel.end_heartbeat()
                     raise
                 except Exception as ex:
                     self._logger.error("MessagePump: Failed to dispatch the message with id {} from {} on thread # {} due to {}".format(
