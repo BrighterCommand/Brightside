@@ -274,7 +274,7 @@ class ArameConsumer(BrightsideConsumer):
                 logger.debug("Signalled to exit long-running handler heartbeat")
 
 
-        heartbeat_thread = threading.Thread(target=_send_heartbeat, args=(self._conn, 10, self._logger), daemon=True)
+        heartbeat_thread = threading.Thread(target=_send_heartbeat, args=(self._conn, 1, self._logger), daemon=True)
         self._logger.debug("Begin heartbeat thread for  %s", self._conn)
         heartbeat_thread.start()
         self._logger.debug("Heartbeat running on thread for  %s", self._conn)
