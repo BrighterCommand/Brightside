@@ -29,6 +29,7 @@ THE SOFTWARE.
 ***********************************************************************
 """
 
+from contextlib import contextmanager
 import logging
 import time
 from typing import Callable
@@ -38,6 +39,13 @@ from brightside.command_processor import CommandProcessor, Request
 from brightside.channels import Channel
 from brightside.exceptions import ChannelFailureException, ConfigurationException, DeferMessageException
 from brightside.messaging import BrightsideMessage, BrightsideMessageHeader, BrightsideMessageType
+
+
+@contextmanager
+def heartbeat(channel: Channel):
+    channel.start_heartbeat()
+    yield
+    channel.end_heartbeat()
 
 
 class MessagePump:
@@ -99,26 +107,22 @@ class MessagePump:
                 self._increment_unacceptable_message_count()
                 continue
 
-            try:
-                # Serviceable message
-                self._channel.start_heartbeat()
+            with (heartbeat(self._channel)):
+                try:
+                    # Serviceable message
+                    request = self._translate_message(message)
+                    self._dispatch_message(message.header, request)
 
-                request = self._translate_message(message)
-                self._dispatch_message(message.header, request)
+                except DeferMessageException:
+                    self._requeue_message(message)
+                    continue
+                except ConfigurationException:
+                    raise
+                except Exception as ex:
+                    self._logger.error("MessagePump: Failed to dispatch the message with id {} from {} on thread # {} due to {}".format(
+                        message.id, self._channel.name, current_thread().name, ex))
 
-            except DeferMessageException:
-                self._requeue_message(message)
-                self._channel.end_heartbeat()
-                continue
-            except ConfigurationException:
-                self._channel.end_heartbeat()
-                raise
-            except:
-                self._logger.error("MessagePump: Failed to dispatch the message with id {} from {} on thread # {}".format(
-                    message.id, self._channel.name, current_thread().name))
-
-            self._channel.end_heartbeat()
-            self._acknowledge_message(message)
+                self._acknowledge_message(message)
 
         self._logger.debug("MessagePump: Finished running message loop, no longer receiving messages from {} on thread # {}".format(
             self._channel.name, current_thread().name))

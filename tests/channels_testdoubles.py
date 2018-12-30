@@ -4,10 +4,10 @@ Author           : ian
 Created          : 11-21-2016
 
 Last Modified By : ian
-Last Modified On : 11-21-2016
+Last Modified On : 11-24-2018
 ***********************************************************************
 The MIT License (MIT)
-Copyright © 2015 Ian Cooper <ian_hammond_cooper@yahoo.co.uk>
+Copyright © 2016 Ian Cooper <ian_hammond_cooper@yahoo.co.uk>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the “Software”), to deal
@@ -29,6 +29,7 @@ THE SOFTWARE.
 ***********************************************************************
 """
 
+import threading
 from typing import List
 
 from brightside.messaging import BrightsideConsumer
@@ -64,6 +65,9 @@ class FakeConsumer(BrightsideConsumer):
 
     def requeue(self, message):
         self._queue.append(message)
+
+    def run_heartbeat_continuously(self) -> threading.Event:
+        return threading.Event()
 
     def stop(self):
         pass

@@ -1,3 +1,4 @@
+import logging
 import time
 
 from brightside.handler import Handler, Command
@@ -24,15 +25,21 @@ class FakeMessageStore(BrightsideMessageStore):
         return None
 
 
-class LongRunningCommandHandler(Handler):
-    def handle(self, request):
-        print("Received Long Running Command - will sleep for {} seconds".format(request.sleep_for))
-        time.sleep(request.sleep_for)
-        print("Ended Long Running Command - woken up message pump")
-
-
 class LongRunningCommand(Command):
     def __init__(self, sleep_for=30):
         super().__init__()
         self.sleep_for = sleep_for
+
+
+class LongRunningCommandHandler(Handler):
+    def __init__(self):
+        super().__init__()
+        self._logger = logging.getLogger(__name__)
+
+    def handle(self, request: LongRunningCommand):
+        self._logger.debug("Received Long Running Command - will sleep for {} seconds".format(request.sleep_for))
+        time.sleep(request.sleep_for)
+        self._logger.debug("Ended Long Running Command - woken up message pump")
+
+
 

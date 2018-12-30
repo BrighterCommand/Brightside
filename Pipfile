@@ -12,8 +12,9 @@ poll = "*"
 "psycopg2" = "*"
 ez_setup = "*"
 SQLAlchemy = "*"
+pytest-env = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.7"
+python_version = "3.6"
