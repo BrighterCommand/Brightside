@@ -35,19 +35,17 @@ import logging
 from datetime import datetime
 import threading
 import time
-from queue import Queue as MessageQueue
 
 from kombu import BrokerConnection, Consumer, Exchange, Producer as Producer, Queue
 from kombu.pools import connections
 from kombu import exceptions as kombu_exceptions
 from kombu.message import Message as KombuMessage
-from kombu.mixins import ConsumerMixin
 
-from brightside.connection import Connection as BrightsideConnection
+from brightside.connection import Connection
 from brightside.exceptions import ChannelFailureException
 from brightside.messaging import BrightsideConsumer, BrightsideConsumerConfiguration, BrightsideMessage, BrightsideProducer, BrightsideMessageHeader, BrightsideMessageBody, BrightsideMessageType
 from arame.messaging import ArameMessageFactory, KombuMessageFactory
-from threading import Thread
+
 
 class ArameProducer(BrightsideProducer):
     """Implements sending a message to a RMQ broker. It does not use a queue, just a connection to the broker
@@ -59,7 +57,7 @@ class ArameProducer(BrightsideProducer):
         'max_retries': 3,
     }
 
-    def __init__(self, connection: BrightsideConnection, logger: logging.Logger=None) -> None:
+    def __init__(self, connection: Connection, logger: logging.Logger=None) -> None:
         self._amqp_uri = connection.amqp_uri
         self._cnx = BrokerConnection(hostname=connection.amqp_uri)
         self._exchange = Exchange(connection.exchange, type=connection.exchange_type, durable=connection.is_durable)
@@ -97,7 +95,7 @@ class ArameProducer(BrightsideProducer):
                 safe_publish(producer)
 
 
-class ArameConsumer(BrightsideConsumer, ConsumerMixin):
+class ArameConsumer(BrightsideConsumer):
     """ Implements reading a message from an RMQ broker. It uses a queue, created by subscribing to a message topic
 
     """
@@ -108,7 +106,7 @@ class ArameConsumer(BrightsideConsumer, ConsumerMixin):
         'max_retries': 3,
     }
 
-    def __init__(self, connection: BrightsideConnection, configuration: BrightsideConsumerConfiguration, logger: logging.Logger=None) -> None:
+    def __init__(self, connection: Connection, configuration: BrightsideConsumerConfiguration, logger: logging.Logger=None) -> None:
         self._exchange = Exchange(connection.exchange, type=connection.exchange_type, durable=connection.is_durable)
         self._routing_key = configuration.routing_key
         self._amqp_uri = connection.amqp_uri
@@ -289,70 +287,4 @@ class ArameConsumer(BrightsideConsumer, ConsumerMixin):
             self._conn = None
 
 
-class NoriHeartbeatingConsumer(ArameConsumer):
-    def __init__(self,
-                 brightsideConnection: BrightsideConnection,
-                 brightsideConfiguration: BrightsideConsumerConfiguration,
-                 exchange: Exchange,
-                 broker_connection: BrokerConnection,
-                 queue: Queue,
-                 logger):
 
-        # we run ArameConsumer constructor logic explicitly here,
-        # since ArameConsumer.__init__ doesn't get invoked (as its mixed in)
-        self.brightsideConnection = brightsideConnection
-        self._exchange = exchange
-        self._routing_key = brightsideConfiguration.routing_key
-        self._amqp_uri = brightsideConnection.amqp_uri
-        self._queue_name = brightsideConfiguration.queue_name
-        self._routing_key = brightsideConfiguration.routing_key
-        self._prefetch_count = brightsideConfiguration.prefetch_count
-        self._is_durable = brightsideConfiguration.is_durable
-        self._message_factory = ArameMessageFactory()
-        self._logger = logger or logging.getLogger(__name__)
-        self._conn = None
-        self._is_long_running_handler = brightsideConfiguration.is_long_runing_handler
-
-        self._queue = queue
-        self._msg = None  # Kombu Message
-        self._message = None  # Brightside Message
-
-        self.queue = queue
-        self.logger = logger
-        self.queues = [self.queue]
-        self.messageQueue = MessageQueue()
-
-        self.connection = broker_connection  # sets ConsumerMixin.connection !
-        self._establish_connection(self.connection)  # a Kombu Connection
-        self._establish_channel()
-        self._establish_consumer()
-
-        Thread(target=self.run_tasks).start()
-
-    # **** Consumer is a method defined on kombu.mixins.ConsumerMixin ****
-    def get_consumers(self, Consumer, channel):
-        return [Consumer(queues=self.queues,
-                         callbacks=[self.on_message],
-                         prefetch_count=1)]
-
-    def on_message(self, body, message):
-        print("new message to internal queue")
-        self.messageQueue.put((body, message))
-
-    def run_tasks(self):
-        while True:
-            try:
-                self.on_task(*self.messageQueue.get())
-            except Exception as ex:
-                logging.error(ex)
-
-            except KeyboardInterrupt:
-                break
-
-    def on_task(self, body, message):
-        print("run task")
-        import time
-        for x in range(50):
-            time.sleep(1)
-            print(x)
-        message.ack()
