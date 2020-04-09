@@ -8,7 +8,7 @@ greenlet==0.4.15
 kombu==4.2.1
 mock==2.0.0
 monotonic==1.5
-pbr==5.1.0
+pbr==5.4.5
 poll==1.0
 psycopg2==2.7.5
 six==1.11.0
