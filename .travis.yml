@@ -9,13 +9,12 @@
     - "3.6"
   cache: pip
   install:
-    - pip install -r requirements.txt
+    - pip install pipenv && pipenv install -e . && pipenv install --dev
   before_script:
     - psql -c 'create database travis_ci_test;' -U postgres
   script:
     - python testrunner.py
     
-  notifications:
   webhooks:
     urls:
       - https://webhooks.gitter.im/e/f69a76bc337b9bbeb66e

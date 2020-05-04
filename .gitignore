@@ -143,3 +143,4 @@ fabric.properties
 .idea/modules.xml
 
 .idea/vcs.xml
+Pipfile.lock

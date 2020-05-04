@@ -4,17 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-amqp = "*"
-eventlet = "*"
-kombu = "*"
-mock = "*"
-poll = "*"
-"psycopg2" = "*"
-ez_setup = "*"
-SQLAlchemy = "*"
-pytest-env = "*"
 
 [dev-packages]
-
-[requires]
-python_version = "3.6"
+ez_setup = "*"
+pytest-env = "*"
+pylint = "*"
+mock = "*"
+poll = "*"
+autopep8 = "*"
+psycopg2 ="*"
+twine = "*"

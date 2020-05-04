@@ -1,11 +1,11 @@
-FROM python:3.6.1
+FROM python:3.6
 ENV PYTHONUNBUFFERED 1
 
 RUN mkdir /code
 ADD . /code
 WORKDIR /code
 
-RUN pip install -r requirements.txt
+RUN pip install pipenv && pipenv install -e . && pipenv install --dev
 
 ENTRYPOINT ["top", "-b"]
 CMD ["-c"]
