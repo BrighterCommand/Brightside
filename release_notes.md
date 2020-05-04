@@ -8,7 +8,9 @@ The process is
 3. From the project root, run the setup tools to build source distribution and wheel in the dist directory
 
 ```
-python setup.py upload
+pipenv install -e .
+pipenv install --dev
+pipenv run python setup.py upload
 ```
 
 # Release Notes

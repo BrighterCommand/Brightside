@@ -4,6 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+brightside = {editable = true,path = "."}
 
 [dev-packages]
 ez_setup = "*"
