@@ -5,7 +5,7 @@ Brightside can also be used stand-alone as an opinionated alternative to librari
 
 
 ## Message Store Configuration
-If you post messages via a Broker, and use alchemy_store then We wneed to know where the tables for the message store can be found;
+If you post messages via a Broker, and use alchemy_store then We need to know where the tables for the message store can be found;
 we don't create the database that contains them, we assume that you will do that, and so we need a connection string to find that
 database. To do this, we pick up the following environment variable:
 
