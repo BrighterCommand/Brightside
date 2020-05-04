@@ -39,6 +39,7 @@ class Registry:
     """
         Provides a registry of commands and handlers i.e. the observer pattern
     """
+
     def __init__(self) -> None:
         self._registry = dict()  # type: Dict[str, List[Callable[[], Handler]]]
 
@@ -54,7 +55,8 @@ class Registry:
         is_event = request_class.is_event()
         is_present = key in self._registry
         if is_command and is_present:
-            raise ConfigurationException("A handler for this request has already been registered")
+            raise ConfigurationException(
+                "A handler for this request has already been registered")
         elif is_event and is_present:
             self._registry[key].append(handler_factory)
         elif is_command or is_event:
@@ -69,9 +71,10 @@ class Registry:
         key = request.__class__.__name__
         if key not in self._registry:
             if request.is_command():
-                raise ConfigurationException("There is no handler registered for this request")
+                raise ConfigurationException(
+                    "There is no handler registered for this request")
             elif request.is_event():
-                return []  # type: Callable[[] Handler]
+                return []
 
         return self._registry[key]
 
@@ -83,8 +86,10 @@ class MessageMapperRegistry:
     """
         Provides a registry of message mappers, used to serialize a command to a message, which a producer can send over the wire
     """
+
     def __init__(self) -> None:
-        self._registry = dict()  # type: Dict[str, Callable[[Request], BrightsideMessage]]
+        # type: Dict[str, Callable[[Request], BrightsideMessage]]
+        self._registry = dict()
 
     def register(self, request_class: Request, mapper_func: Callable[[Request], BrightsideMessage]) -> None:
         """Adds a message mapper to a factory, using the requests key
@@ -96,7 +101,8 @@ class MessageMapperRegistry:
         if key not in self._registry:
             self._registry[key] = mapper_func
         else:
-            raise ConfigurationException("There is already a message mapper defined for this key; there can be only one")
+            raise ConfigurationException(
+                "There is already a message mapper defined for this key; there can be only one")
 
     def lookup(self, request_class: Request) -> Callable[[Request], BrightsideMessage]:
         """
@@ -107,14 +113,8 @@ class MessageMapperRegistry:
         """
         key = request_class.__class__.__name__
         if key not in self._registry:
-            raise ConfigurationException("There is no message mapper associated with this key; we require a mapper")
+            raise ConfigurationException(
+                "There is no message mapper associated with this key; we require a mapper")
         else:
             return self._registry[key]
-
-
-
-
-
-
-
 
