@@ -1,9 +1,8 @@
-version: '2.1'
+version: '3.7'
 
 services:
-  postgres:
-    hostname: brightside-db
-    container_name: brightside-db
+  db:
+    image: brightside-db
     build: ./tests/db
     environment:
       - POSTGRES_PASSWORD=password
@@ -11,10 +10,12 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: exit 0
-  rabbit:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  rabbitmq:
     image: rabbitmq:3-management
-    hostname: brighside_broker
     environment:
       - RABBITMQ_ERLANG_COOKIE=SWQOKODSQALRPCLNMEQG
       - RABBITMQ_DEFAULT_USER=guest
@@ -27,15 +28,10 @@ services:
     container_name: brightside-tests
     build: ./
     environment:
-      - BROKER=amqp://guest:guest@brightside_broker:5672
-      - BRIGHTER_MESSAGE_STORE_URL=postgres://docker:password@brightside-db:5432/brightside_test
+      - BROKER=amqp://guest:guest@rabbitmq:5672
+      - BRIGHTER_MESSAGE_STORE_URL=postgres://docker:password@db:5432/brightside_test
     depends_on:
-      rabbit:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-    links:
-      - rabbit:brightside_broker
-      - postgres:brightside-db
+       - rabbitmq
+       - db
 
 

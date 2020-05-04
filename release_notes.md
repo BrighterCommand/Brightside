@@ -1,22 +1,15 @@
 # Release Process
 We release to PyPI using twine.
 
-The proces is
+The process is
 
 1. Increment the project version in setup.py
 2. Clear the dist directory
 3. From the project root, run the setup tools to build source distribution and wheel in the dist directory
 
 ```
-python setup.py sdist bdist_wheel
+python setup.py upload
 ```
-
-4. From the root, upload via twine
-
-```
-twine upload dist/*
-````
-
 
 # Release Notes
 
