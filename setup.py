@@ -18,7 +18,7 @@ URL = 'https://github.com/BrighterCommand/Brightside'
 EMAIL = 'ian_hammond_cooper@yahoo.co.uk'
 AUTHOR = 'Ian Cooper'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.6.12'
+VERSION = '0.6.13'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
