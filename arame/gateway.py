@@ -82,7 +82,7 @@ class ArameProducer(BrightsideProducer):
                            declare=[self._exchange])
 
         def _error_callback(e, interval) -> None:
-            logger.debug('Publishing error: {e}. Will retry in {interval} seconds', e, interval)
+            logger.debug("Publishing error: {e}. Will retry in {interval} seconds".format(e=e, interval=interval))
 
         self._logger.debug("Connect to broker {amqpuri}".format(amqpuri=self._amqp_uri))
 
@@ -114,6 +114,8 @@ class ArameConsumer(BrightsideConsumer):
         self._routing_key = configuration.routing_key
         self._prefetch_count = configuration.prefetch_count
         self._is_durable = configuration.is_durable
+        self._heartbeat = connection.heartbeat
+        self._connect_timeout = connection.connect_timeout
         self._message_factory = ArameMessageFactory()
         self._logger = logger or logging.getLogger(__name__)
         self._conn = None
@@ -129,7 +131,7 @@ class ArameConsumer(BrightsideConsumer):
         self._msg = None  # Kombu Message
         self._message = None  # Brightside Message
 
-        self._establish_connection(BrokerConnection(hostname=self._amqp_uri, connect_timeout=30, heartbeat=30))
+        self._establish_connection(BrokerConnection(hostname=self._amqp_uri, connect_timeout=self._connect_timeout, heartbeat=self._heartbeat))
         self._establish_channel()
         self._establish_consumer()
 
@@ -239,7 +241,7 @@ class ArameConsumer(BrightsideConsumer):
     def _reset_connection(self) -> None:
         self._logger.debug('Reset connection to RabbitMQ following socket error')
         self._conn.close()
-        self._establish_connection(BrokerConnection(hostname=self._amqp_uri, connect_timeout=30, heartbeat=30))
+        self._establish_connection(BrokerConnection(hostname=self._amqp_uri, connect_timeout=self._connect_timeout, heartbeat=self._heartbeat))
         self._establish_channel()
         self._establish_consumer()
 
@@ -273,7 +275,6 @@ class ArameConsumer(BrightsideConsumer):
                     time.sleep(period)
                 logger.debug("Signalled to exit long-running handler heartbeat")
 
-
         heartbeat_thread = threading.Thread(target=_send_heartbeat, args=(self._conn, 1, self._logger), daemon=True)
         self._logger.debug("Begin heartbeat thread for  %s", self._conn)
         heartbeat_thread.start()
@@ -285,6 +286,4 @@ class ArameConsumer(BrightsideConsumer):
             self._logger.debug("Closing connection: %s", self._conn)
             self._conn.close()
             self._conn = None
-
-
-
+            
