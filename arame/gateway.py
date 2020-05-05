@@ -272,7 +272,7 @@ class ArameConsumer(BrightsideConsumer):
         def _send_heartbeat(cnx: BrokerConnection, period: int, logger: logging.Logger) -> None:
                 while not cancellation_event.is_set():
                     cnx.heartbeat_check()
-                    time.sleep(period)
+                    cancellation_event.wait(timeout= period)
                 logger.debug("Signalled to exit long-running handler heartbeat")
 
         heartbeat_thread = threading.Thread(target=_send_heartbeat, args=(self._conn, 1, self._logger), daemon=True)
