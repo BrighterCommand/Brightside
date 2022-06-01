@@ -1,7 +1,7 @@
 amqp==2.2.1
 brightside==0.6.7
 ez-setup==0.9
-eventlet==0.22.1
+eventlet==0.31.0
 kombu==4.1.0
 mock==2.0.0
 pbr==3.1.1
