@@ -1,3 +1,11 @@
+# Archive
+
+We have taken the decision to archive this repository, and focus our efforts on our DotNet libraries. Please see this issue: https://github.com/BrighterCommand/Brightside/issues/72
+
+We recommend Banshee as a Python alternative that carries forward the Brighter approach: https://banshee.artisan.io/
+
+Feel free to fork this repo if you wish to move Brightside forward, or reach out to us.
+
 # Brightside
 Brightside is a command dispatcher and processor for Python. It also provides a work queue for asynchronous dispatch over a broker such as RabbitMQ.
 It is intended to work with Brighter, a C# command dispatcher and processor and allow polyglot solutions i.e. a Flask endpoint that sends work over a queue to a C# consumer or an ASP.NET WebAPI endpoint that sends a request over a work queue to a Python application.
